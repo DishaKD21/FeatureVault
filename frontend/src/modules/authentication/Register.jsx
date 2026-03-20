@@ -11,6 +11,7 @@ import Link from "next/link";
     password: ""
   });
 
+  
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {
     setFormData({
