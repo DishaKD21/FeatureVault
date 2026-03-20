@@ -5,8 +5,9 @@ import Google from "../../../public/google.svg";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../authentication/firebase";
+import { toast } from "react-toastify";
 
- const Register = () => {
+const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -40,6 +41,7 @@ const handleSubmit = async (e) => {
 
   if (Object.keys(validationErrors).length > 0) {
     setErrors(validationErrors);
+    toast.error("Please fix form errors");
   } else {
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -48,13 +50,15 @@ const handleSubmit = async (e) => {
         formData.password
       );
 
-      // Add name
       await updateProfile(userCredential.user, {
         displayName: formData.name,
       });
 
+      toast.success("Registration successful!");
       console.log("Registered:", userCredential.user);
+
     } catch (error) {
+      toast.error(error.message);
       setErrors({ email: error.message });
     }
   }
@@ -62,9 +66,10 @@ const handleSubmit = async (e) => {
 const handleGoogleSignup = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
+    toast.success("Google signup successful!");
     console.log("Google User:", result.user);
   } catch (error) {
-    console.log(error);
+    toast.error(error.message);
   }
 };
   return (

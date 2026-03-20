@@ -6,6 +6,7 @@ import Google from "../../../public/google.svg";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../authentication/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -31,48 +32,51 @@ const Login = () => {
     }
     return newErrors;
   };
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("Google User:", result.user);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+ const handleGoogleLogin = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    toast.success("Google login successful!");
+    console.log("Google User:", result.user);
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
   const handleResetPassword = async () => {
-    if (!formData.email) {
-      alert("Enter email first");
-      return;
-    }
+  if (!formData.email) {
+    toast.warning("Enter email first");
+    return;
+  }
 
-    try {
-      await sendPasswordResetEmail(auth, formData.email);
-      alert("Password reset email sent!");
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  try {
+    await sendPasswordResetEmail(auth, formData.email);
+    toast.success("Password reset email sent! Check spam folder too.");
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
+  e.preventDefault();
+  const validationErrors = validateForm();
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-    } else {
-      try {
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password,
-        );
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    toast.error("Please fix form errors");
+  } else {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
 
-        console.log("Logged in:", userCredential.user);
-      } catch (error) {
-        setErrors({ email: error.message });
-      }
+      toast.success("Login successful!");
+      console.log("Logged in:", userCredential.user);
+    } catch (error) {
+      toast.error(error.message);
     }
-  };
+  }
+};
 
   return (
     <div className="flex justify-center items-center text-center w-screen h-screen border-2 border-amber-950">
