@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Google from "../../../public/google.svg";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
+import { auth, provider } from "../authentication/firebase";
 
  const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +12,6 @@ import { auth, provider } from "@/lib/firebase";
     email: "",
     password: ""
   });
-
 
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {

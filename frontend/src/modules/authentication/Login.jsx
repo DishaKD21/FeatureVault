@@ -4,14 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import Google from "../../../public/google.svg";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
+import { auth, provider } from "../authentication/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
-
 
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {
@@ -31,41 +31,57 @@ const Login = () => {
     }
     return newErrors;
   };
-const handleGoogleLogin = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    console.log("Google User:", result.user);
-  } catch (error) {
-    console.log(error);
-  }
-};
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm();
-
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-  } else {
+  const handleGoogleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      console.log("Logged in:", userCredential.user);
+      const result = await signInWithPopup(auth, provider);
+      console.log("Google User:", result.user);
     } catch (error) {
-      setErrors({ email: error.message });
+      console.log(error);
     }
-  }
-};
+  };
+  const handleResetPassword = async () => {
+    if (!formData.email) {
+      alert("Enter email first");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      alert("Password reset email sent!");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password,
+        );
+
+        console.log("Logged in:", userCredential.user);
+      } catch (error) {
+        setErrors({ email: error.message });
+      }
+    }
+  };
 
   return (
     <div className="flex justify-center items-center text-center w-screen h-screen border-2 border-amber-950">
       <div className=" border-blue-300 p-3 border-2">
         <h1 className="text-2xl pb-3">Sign In</h1>
         <form onSubmit={handleSubmit} className="flex flex-col item-center">
-          <label htmlFor="email" className="flex flex-left justify-between">Email</label>
+          <label htmlFor="email" className="flex flex-left justify-between">
+            Email
+          </label>
           <input
             type="email"
             name="email"
@@ -76,7 +92,11 @@ const handleGoogleLogin = async () => {
           <div className="flex flex-row justify-between gap-3">
             <label>Password</label>
             <Link href="">
-              <span className="text-blue-400 underline">Forgot Password?</span>
+              <span
+                onClick={handleResetPassword}
+                className="text-blue-400 underline cursor-pointer">
+                Forgot Password?
+              </span>
             </Link>
           </div>
           <input
@@ -97,11 +117,14 @@ const handleGoogleLogin = async () => {
             <span>or continue with</span>
             <hr className="border border-b-gray-400 w-50 m-3"></hr>
           </div>
-          <div  onClick={handleGoogleLogin} className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3">
+          <div
+            onClick={handleGoogleLogin}
+            className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3"
+          >
             <Image src={Google} height="20" width="20"></Image>
             Google
           </div>
-           <div className="flex flex-row justify-center">
+          <div className="flex flex-row justify-center">
             <p>Don't have an Account?</p>
             <Link href="/register">
               <span className="text-blue-400 underline">Sign up</span>
