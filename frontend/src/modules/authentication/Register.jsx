@@ -3,6 +3,8 @@ import Image from "next/image";
 import React, { useState } from "react";
 import Google from "../../../public/google.svg";
 import Link from "next/link";
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/lib/firebase";
 
  const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +13,7 @@ import Link from "next/link";
     password: ""
   });
 
-  
+
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {
     setFormData({
@@ -33,18 +35,39 @@ import Link from "next/link";
     }
     return newErrors;
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const validationErrors = validateForm();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-    } else {
-      console.log("Form Submitted:", formData);
-      setErrors({});
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+  } else {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // Add name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name,
+      });
+
+      console.log("Registered:", userCredential.user);
+    } catch (error) {
+      setErrors({ email: error.message });
     }
-  };
-
+  }
+};
+const handleGoogleSignup = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    console.log("Google User:", result.user);
+  } catch (error) {
+    console.log(error);
+  }
+};
   return (
     <div className="flex justify-center items-center text-center w-screen h-screen">
       <div className="border-blue-300 p-5 border-2 w-80">
@@ -84,7 +107,7 @@ import Link from "next/link";
             <span className="inline-block">or continue with</span>
             <hr className="border border-b-gray-400 w-20 m-1"></hr>
           </div>
-          <div className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3">
+          <div onClick={handleGoogleSignup} className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3">
             <Image src={Google} height="20" width="20"></Image>
             Google
           </div>

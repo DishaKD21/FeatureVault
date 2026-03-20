@@ -3,13 +3,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Google from "../../../public/google.svg";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/lib/firebase";
+
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
-  
+
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {
     setFormData({
@@ -28,17 +31,34 @@ const Login = () => {
     }
     return newErrors;
   };
+const handleGoogleLogin = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    console.log("Google User:", result.user);
+  } catch (error) {
+    console.log(error);
+  }
+};
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const validationErrors = validateForm();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-    } else {
-      console.log("Form Submitted:", formData);
-      setErrors({});
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+  } else {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      console.log("Logged in:", userCredential.user);
+    } catch (error) {
+      setErrors({ email: error.message });
     }
-  };
+  }
+};
 
   return (
     <div className="flex justify-center items-center text-center w-screen h-screen border-2 border-amber-950">
@@ -77,7 +97,7 @@ const Login = () => {
             <span>or continue with</span>
             <hr className="border border-b-gray-400 w-50 m-3"></hr>
           </div>
-          <div className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3">
+          <div  onClick={handleGoogleLogin} className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3">
             <Image src={Google} height="20" width="20"></Image>
             Google
           </div>
