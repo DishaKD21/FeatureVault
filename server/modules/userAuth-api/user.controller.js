@@ -1,4 +1,4 @@
-import User from "../model/userModel.js";
+import User from "./user.model.js";
 
 export const firebaseLogin = async (req, res) => {
   const { uid, email, name } = req.user;
