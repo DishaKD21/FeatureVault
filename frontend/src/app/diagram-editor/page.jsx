@@ -1,11 +1,12 @@
-'use client';
+import DiagramEditor from '@/modules/diagrameditor/DiagramEditor'
+import React from 'react'
 
-import DiagramEditor from '@/modules/diagrameditor/DiagramEditor';
-
-export default function DiagramEditorPage() {
+const page = () => {
   return (
-    <div >
+    <div>
       <DiagramEditor />
     </div>
-  );
+  )
 }
+
+export default page
