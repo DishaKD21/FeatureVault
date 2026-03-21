@@ -1,11 +1,40 @@
-import React from 'react'
+'use client';
 
-const DiagramEditor = () => {
+import React from 'react';
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  BackgroundVariant,
+  Controls,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
+function Playground() {
   return (
-    <div className="flex justify-center items-center text-center w-screen h-screen">
-      <h1 className="text-2xl border-blue-300 p-3 border-2">DiagramEditor</h1>
+    <div className="w-screen h-screen">
+      <ReactFlow nodes={[]} edges={[]}>
+        
+        {/* Background */}
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color="#d1d5db"
+        />
+
+        {/* Zoom Controls */}
+        <Controls className="!bg-white !shadow-lg !rounded-lg" />
+
+      </ReactFlow>
     </div>
-  )
+  );
 }
 
-export default DiagramEditor;
+export default function DiagramEditor() {
+  return (
+    <ReactFlowProvider>
+      <Playground />
+    </ReactFlowProvider>
+  );
+}

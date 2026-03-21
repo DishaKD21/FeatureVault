@@ -1,12 +1,11 @@
-import DiagramEditor from '@/modules/diagrameditor/DiagramEditor'
-import React from 'react'
+'use client';
 
-const page = () => {
+import DiagramEditor from '@/modules/diagrameditor/DiagramEditor';
+
+export default function DiagramEditorPage() {
   return (
-    <div>
-      <DiagramEditor/>
+    <div >
+      <DiagramEditor />
     </div>
-  )
+  );
 }
-
-export default page
