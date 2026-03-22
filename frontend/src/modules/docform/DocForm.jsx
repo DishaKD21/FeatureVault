@@ -9,10 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import UserStoryTable from "./UserStoryTable";
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import MultiInput from "./MultiInput";
 
-ModuleRegistry.registerModules([AllCommunityModule]);
 const DocForm = () => {
   const { register, setValue, watch } = useForm();
 
