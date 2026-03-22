@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -17,9 +18,12 @@ const Hero = () => {
       </p>
 
       {/* Button */}
-      <button className="border px-6 py-2 rounded-lg hover:bg-gray-100 mb-10">
+      <Link
+        href="/create-doc"
+        className="border px-6 py-2 rounded-lg hover:bg-gray-100 mb-10 inline-block"
+      >
         Create Documentation
-      </button>
+      </Link>
 
       {/* Placeholder Box */}
       <div className="w-full max-w-3xl h-64 border-2 border-dashed border-green-400 rounded-2xl bg-green-50 flex items-center justify-center">

@@ -2,7 +2,7 @@ import React from "react";
 
 const Feature = () => {
   return (
-    <section className="px-6 py-16 bg-white text-center">
+    <section id="features" className="px-6 py-16 bg-white text-center">
       
       {/* Title */}
       <h2 className="text-3xl font-semibold mb-12">

@@ -1,9 +1,7 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
-
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -31,7 +29,7 @@ const DocForm = () => {
   return (
     <div className="p-10 max-w-4xl mx-auto space-y-10">
 
-      {/* 🔥 Requirement Elucidation */}
+      {/*  Requirement Elucidation */}
       <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
         <h2 className="text-lg font-semibold">Requirement Elucidation</h2>
 
@@ -91,7 +89,7 @@ const DocForm = () => {
         </div>
       </div>
 
-      {/* 🔥 Feature Section */}
+      {/*  Feature Section */}
       <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
         <h2 className="text-lg font-semibold">Feature</h2>
 
@@ -168,7 +166,7 @@ const DocForm = () => {
         </div>
       </div>
 
-      {/* 🔥 Design Diagram Section */}
+      {/*  Design Diagram Section */}
       <div className="border rounded-xl p-5 flex items-center justify-between">
         <span className="font-medium">Design Diagram</span>
 
@@ -187,7 +185,7 @@ const DocForm = () => {
 </div>
 
 
-{/* 🔥 Tracking & Release Details */}
+{/*  Tracking & Release Details */}
 <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
   <h2 className="text-lg font-semibold">Tracking & Release Details</h2>
 
@@ -219,7 +217,7 @@ const DocForm = () => {
   <MultiInput label="Environment Deploy Links" />
 </div>
 
-{/* 🔥 Who Created It */}
+{/*  Who Created It */}
 <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
   <h2 className="text-lg font-semibold">Who Created It</h2>
 

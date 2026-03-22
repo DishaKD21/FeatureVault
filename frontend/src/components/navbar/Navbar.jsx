@@ -13,16 +13,16 @@ const Navbar = () => {
 
       {/* Center - Links */}
       <div className="flex gap-6 text-gray-700">
-        <Link href="#" className="hover:text-black">Home</Link>
-        <Link href="#" className="hover:text-black">Features</Link>
-        <Link href="#" className="hover:text-black">Diagram Tool</Link>
+        <Link href="/" className="hover:text-black">Home</Link>
+        <Link href="#features" className="hover:text-black">Features</Link>
+        <Link href="/diagram-editor" className="hover:text-black">Diagram Tool</Link>
       </div>
 
       {/* Right - Signup + Profile */}
       <div className="flex items-center gap-4">
-        <button className="border px-4 py-1 rounded-md hover:bg-gray-100">
+        <Link href="/register" className="border px-4 py-1 rounded-md hover:bg-gray-100">
           Signup
-        </button>
+        </Link>
 
         {/* <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
           👤
