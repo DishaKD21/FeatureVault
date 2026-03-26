@@ -29,7 +29,7 @@ const UserStoryTable = () => {
 
   // ❌ Delete Row
   const deleteRow = (index) => {
-    if (rows === 1) return;
+    if (rows === 1) return
     setData(data.filter((_, i) => i !== index));
   };
 
