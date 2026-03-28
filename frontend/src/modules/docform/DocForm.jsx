@@ -3,13 +3,17 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import UserStoryTable from "./UserStoryTable";
 import MultiInput from "./MultiInput";
+import EditableTable from "./UserStoryTable";
 
 const DocForm = () => {
   const { register, setValue, watch } = useForm();
@@ -26,7 +30,6 @@ const DocForm = () => {
 
   return (
     <div className="p-10 max-w-4xl mx-auto space-y-10">
-
       {/*  Requirement Elucidation */}
       <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
         <h2 className="text-lg font-semibold">Requirement Elucidation</h2>
@@ -111,7 +114,10 @@ const DocForm = () => {
               <Label>Start Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-2 justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2 justify-start"
+                  >
                     {featureStart instanceof Date
                       ? format(featureStart, "PPP")
                       : "Select date"}
@@ -121,9 +127,7 @@ const DocForm = () => {
                   <Calendar
                     mode="single"
                     selected={featureStart}
-                    onSelect={(date) =>
-                      setValue("feature.startTime", date)
-                    }
+                    onSelect={(date) => setValue("feature.startTime", date)}
                   />
                 </PopoverContent>
               </Popover>
@@ -133,7 +137,10 @@ const DocForm = () => {
               <Label>End Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-2 justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2 justify-start"
+                  >
                     {featureEnd instanceof Date
                       ? format(featureEnd, "PPP")
                       : "Select date"}
@@ -143,9 +150,7 @@ const DocForm = () => {
                   <Calendar
                     mode="single"
                     selected={featureEnd}
-                    onSelect={(date) =>
-                      setValue("feature.endTime", date)
-                    }
+                    onSelect={(date) => setValue("feature.endTime", date)}
                   />
                 </PopoverContent>
               </Popover>
@@ -168,80 +173,77 @@ const DocForm = () => {
       <div className="border rounded-xl p-5 flex items-center justify-between">
         <span className="font-medium">Design Diagram</span>
 
-        <Button variant="secondary">
-          Create your design diagram
-        </Button>
+        <Button variant="secondary">Create your design diagram</Button>
       </div>
-      
+
       <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-  <h2 className="text-lg font-semibold">Feature Estimate</h2>
+        <h2 className="text-lg font-semibold">Feature Estimate</h2>
 
-  <div>
-    <p className="font-medium mb-2">User Story Distribution</p>
-    <UserStoryTable />
-  </div>
-</div>
+        <div>
+          <p className="font-medium mb-2">User Story Distribution</p>
+          <EditableTable />
+        </div>
+      </div>
 
+      {/*  Tracking & Release Details */}
+      <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Tracking & Release Details</h2>
 
-{/*  Tracking & Release Details */}
-<div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-  <h2 className="text-lg font-semibold">Tracking & Release Details</h2>
+        {/* User Story Number */}
+        <div>
+          <label className="font-medium">User Story Number</label>
+          <Input className="mt-2 w-64" />
+        </div>
 
-  {/* User Story Number */}
-  <div>
-    <label className="font-medium">User Story Number</label>
-    <Input className="mt-2 w-64" />
-  </div>
+        {/* User Story Link */}
+        <div>
+          <label className="font-medium">User Story Link</label>
+          <Input className="mt-2 w-96" />
+        </div>
 
-  {/* User Story Link */}
-  <div>
-    <label className="font-medium">User Story Link</label>
-    <Input className="mt-2 w-96" />
-  </div>
+        {/* PR Links */}
+        <MultiInput label="PR Links" />
 
-  {/* PR Links */}
-  <MultiInput label="PR Links" />
+        {/* Code Description */}
+        <div>
+          <label className="font-medium">Code Description</label>
+          <textarea className="mt-2 w-full h-28 border rounded-xl p-3" />
+        </div>
 
-  {/* Code Description */}
-  <div>
-    <label className="font-medium">Code Description</label>
-    <textarea className="mt-2 w-full h-28 border rounded-xl p-3" />
-  </div>
+        {/* Pipeline Links */}
+        <MultiInput label="Pipeline Build Links" />
 
-  {/* Pipeline Links */}
-  <MultiInput label="Pipeline Build Links" />
+        {/* Environment Links */}
+        <MultiInput label="Environment Deploy Links" />
+      </div>
 
-  {/* Environment Links */}
-  <MultiInput label="Environment Deploy Links" />
-</div>
+      {/*  Who Created It */}
+      <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Who Created It</h2>
 
-{/*  Who Created It */}
-<div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-  <h2 className="text-lg font-semibold">Who Created It</h2>
+        <div className="grid grid-cols-3 gap-6">
+          <div>
+            <label className="font-medium">Name</label>
+            <Input className="mt-2" />
+          </div>
 
-  <div className="grid grid-cols-3 gap-6">
-    <div>
-      <label className="font-medium">Name</label>
-      <Input className="mt-2" />
-    </div>
+          <div>
+            <label className="font-medium">Emp ID</label>
+            <Input className="mt-2" />
+          </div>
 
-    <div>
-      <label className="font-medium">Emp ID</label>
-      <Input className="mt-2" />
-    </div>
+          <div>
+            <label className="font-medium">Total Time</label>
+            <Input className="mt-2" />
+          </div>
+        </div>
+      </div>
+      {/*  Retrospective Section */}
+      <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Retrospection Section</h2>
 
-    <div>
-      <label className="font-medium">Total Time</label>
-      <Input className="mt-2" />
-    </div>
-  </div>
-</div>
-{/*  Retrospective Section */}
-<div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-  <h2 className="text-lg font-semibold">Retrospection Section</h2>
-
-  <UserStoryTable />
-</div>
+        <EditableTable />
+      </div>
       {/* Submit */}
       <Button className="w-full h-11 text-base">Submit</Button>
     </div>
