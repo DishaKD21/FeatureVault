@@ -4,6 +4,6 @@ import { verifyToken } from "./middleware.js";
 
 const router = express.Router();
 
-router.post("/firebase", verifyToken, firebaseLogin);
+router.post("/auth/firebase", verifyToken, firebaseLogin);
 
 export default router;

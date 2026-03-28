@@ -1,142 +1,184 @@
 "use client";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import "./UserStoryTable.css";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
 
-import React, { useState } from "react";
+export default function EditableTable() {
+  const [contextMenu, setContextMenu] = useState(null);
+  const [tableSize, setTableSize] = useState({ rows: 0, cols: 0 });
+  const wrapRef = useRef(null);
+  const editor = useEditor({
+    editorProps: {
+      handleKeyDown(view, event) {
+        if (event.key === "Enter") {
+          return true;
+        }
+        return false;
+      },
+    },
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+    ],
+    content: `
+      <table>
+        <tbody>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    `,
+  });
 
-const UserStoryTable = () => {
-  const [data, setData] = useState([[""]]);
-  const [activeCell, setActiveCell] = useState(null);
+  const getTableSize = () => {
+    const table = wrapRef.current?.querySelector("table");
+    if (!table) return { rows: 0, cols: 0 };
 
-  const rows = data.length;
-  const cols = data[0].length;
+    const rows = table.querySelectorAll("tr").length;
+    const cols = table.querySelector("tr")?.children.length || 0;
 
-  // ➕ Row
-  const addRow = (index) => {
-    const newRow = Array(cols).fill("");
-    const newData = [...data];
-    newData.splice(index, 0, newRow);
-    setData(newData);
+    return { rows, cols };
   };
+  useEffect(() => {
+    if (!editor) return;
 
-  // ➕ Column
-  const addCol = (index) => {
-    const newData = data.map((row) => {
-      const newRow = [...row];
-      newRow.splice(index, 0, "");
-      return newRow;
-    });
-    setData(newData);
-  };
+    const update = () => {
+      setTableSize(getTableSize());
+    };
 
-  // ❌ Delete Row
-  const deleteRow = (index) => {
-    if (rows === 1) return
-    setData(data.filter((_, i) => i !== index));
-  };
+    editor.on("update", update);
+    update();
 
-  // ❌ Delete Column
-  const deleteCol = (index) => {
-    if (cols === 1) return;
-    const newData = data.map((row) =>
-      row.filter((_, i) => i !== index)
-    );
-    setData(newData);
-  };
+    return () => {
+      editor.off("update", update);
+    };
+  }, [editor]);
+  const handleContextMenu = useCallback(
+    (e) => {
+      if (!editor) return;
+      const cell = e.target.closest("td, th");
+      if (!cell) return;
+      e.preventDefault();
 
-  // ✏️ Cell Edit
-  const handleChange = (r, c, value) => {
-    const newData = [...data];
-    newData[r][c] = value;
-    setData(newData);
-  };
+      const selectedCells =
+        wrapRef.current?.querySelectorAll(".selectedCell") ?? [];
+      let type = null;
+
+      if (selectedCells.length > 0) {
+        const rows = new Set();
+        const cols = new Set();
+        selectedCells.forEach((c) => {
+          const row = c.closest("tr");
+          const rowIdx = Array.from(row.parentElement.children).indexOf(row);
+          const colIdx = Array.from(row.children).indexOf(c);
+          rows.add(rowIdx);
+          cols.add(colIdx);
+        });
+        if (cols.size === 1) type = "col";
+        else type = "row";
+      }
+
+      setContextMenu({ x: e.clientX, y: e.clientY, type });
+    },
+    [editor],
+  );
+
+  useEffect(() => {
+    const close = () => setContextMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
+
+  if (!editor) return null;
 
   return (
-    <div className="flex justify-center mt-10">
-      <div className="relative">
+    <div className="nt-root">
+      <div className="nt-page">
+        <div className="nt-title">Table</div>
+        
+        <div
+          className="nt-table-wrap"
+          ref={wrapRef}
+          onContextMenu={handleContextMenu}
+        >
+          <div className="nt-editor">
+            <EditorContent editor={editor} />
+          </div>
 
-        <table className="border-collapse border">
-          <tbody>
-            {data.map((row, r) => (
-              <tr key={r}>
-                {row.map((cell, c) => (
-                  <td
-                    key={c}
-                    className="border p-2 relative"
-                    onDoubleClick={() => setActiveCell({ r, c })}
-                  >
-                    <input
-                      value={cell}
-                      onChange={(e) =>
-                        handleChange(r, c, e.target.value)
-                      }
-                      className="w-24 h-10 text-center outline-none"
-                    />
+          <button
+            className="nt-add-row"
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+          >
+            <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
+            New row
+          </button>
 
-                    {/* 🎯 Controls */}
-                    {activeCell?.r === r && activeCell?.c === c && (
-                      <>
-                        {/* Top */}
-                        <button
-                          onClick={() => addRow(r)}
-                          className="absolute -top-5 left-1/2 -translate-x-1/2"
-                        >
-                          ➕
-                        </button>
-
-                        {/* Bottom */}
-                        <button
-                          onClick={() => addRow(r + 1)}
-                          className="absolute -bottom-5 left-1/2 -translate-x-1/2"
-                        >
-                          ➕
-                        </button>
-
-                        {/* Left */}
-                        <button
-                          onClick={() => addCol(c)}
-                          className="absolute left-[-20px] top-1/2 -translate-y-1/2"
-                        >
-                          ➕
-                        </button>
-
-                        {/* Right */}
-                        <button
-                          onClick={() => addCol(c + 1)}
-                          className="absolute right-[-20px] top-1/2 -translate-y-1/2"
-                        >
-                          ➕
-                        </button>
-
-                        {/* Delete Row */}
-                        <button
-                          onClick={() => deleteRow(r)}
-                          className="absolute -top-5 right-[-20px] text-red-500"
-                        >
-                          ➖
-                        </button>
-
-                        {/* Delete Column */}
-                        <button
-                          onClick={() => deleteCol(c)}
-                          className="absolute -bottom-5 right-[-20px] text-red-500"
-                        >
-                          ➖
-                        </button>
-                      </>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Debug */}
-        <pre className="mt-5 text-xs bg-gray-100 p-2">
-          {JSON.stringify(data, null, 2)}
-        </pre>
+          <button
+            className="nt-add-col"
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+          >
+            +
+          </button>
+        </div>
       </div>
+
+      {contextMenu && (
+        <div
+          className="nt-ctx-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="nt-ctx-item"
+            disabled={tableSize.rows <= 1}
+            title={tableSize.rows <= 1 ? "At least 1 row required" : ""}
+            onClick={() => {
+              if (tableSize.rows <= 1) return;
+              editor.chain().focus().deleteRow().run();
+              setContextMenu(null);
+            }}
+          >
+            Delete row
+          </button>
+
+          <div className="nt-ctx-sep" />
+
+          <button
+            className="nt-ctx-item"
+            disabled={tableSize.cols <= 1}
+            title={tableSize.cols <= 1 ? "At least 1 column required" : ""}
+            onClick={() => {
+              if (tableSize.cols <= 1) return;
+              editor.chain().focus().deleteColumn().run();
+              setContextMenu(null);
+            }}
+          >
+            Delete column
+          </button>
+        </div>
+      )}
     </div>
   );
-};
-
-export default UserStoryTable;
+}

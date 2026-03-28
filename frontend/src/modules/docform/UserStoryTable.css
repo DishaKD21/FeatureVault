@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600&display=swap');
+
+.nt-root * {
+    box-sizing: border-box;
+}
+
+.nt-root table {
+    border-collapse: collapse;
+}
+
+.nt-root td,
+.nt-root th {
+    padding: 9px 12px;
+}
+.nt-page {
+    width: 100%;
+    max-width: 840px;
+}
+
+.nt-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Table wrapper ── */
+.nt-table-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* ── TipTap editor surface ── */
+.nt-editor .ProseMirror {
+    outline: none;
+}
+
+.nt-editor table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #d4d4d4;
+}
+
+.nt-editor td,
+.nt-editor th {
+    border: 1px solid #272727;
+    padding: 9px 12px;
+    vertical-align: top;
+    position: relative;
+    min-width: 80px;
+    transition: background 0.12s;
+}
+
+.nt-editor th {
+    background: #fff8f8;
+    color: #000000;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nt-editor td {
+    background: #fff9f9;
+}
+
+.nt-editor td:focus-within,
+.nt-editor th:focus-within {
+    background: #1a1a1a;
+}
+
+.nt-editor .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    pointer-events: none;
+}
+
+.nt-editor .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #6366f1;
+    opacity: 0;
+    cursor: col-resize;
+    transition: opacity 0.15s;
+    z-index: 10;
+}
+
+.nt-editor:hover .column-resize-handle {
+    opacity: 0.4;
+}
+
+.nt-editor .column-resize-handle:hover {
+    opacity: 1;
+}
+
+.nt-editor.resize-cursor {
+    cursor: col-resize;
+}
+
+/* ── Add Row button (bottom) ── */
+.nt-add-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    margin-top: 2px;
+    border: 1px dashed #2a2a2a;
+    background: transparent;
+    color: #444;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 0 0 4px 4px;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.nt-table-wrap:hover .nt-add-row {
+    opacity: 1;
+}
+
+.nt-add-row:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+/* ── Add Column button (right side) ── */
+.nt-add-col {
+    position: absolute;
+    right: -34px;
+    top: 0;
+    bottom: 28px;
+    width: 28px;
+    border: 1px dashed #2a2a2a;
+    background: transparent;
+    color: #444;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.nt-table-wrap:hover .nt-add-col {
+    opacity: 1;
+}
+
+.nt-add-col:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+/* ── Context Menu ── */
+.nt-ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    background: #ffffff;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    padding: 4px;
+    min-width: 160px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    font-family: 'Syne', sans-serif;
+}
+
+.nt-ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: #cc4444;
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+}
+
+.nt-ctx-item:hover {
+    background: rgba(204, 68, 68, 0.12);
+}
+
+.nt-ctx-sep {
+    height: 1px;
+    background: #2a2a2a;
+    margin: 3px 4px;
+}
