@@ -17,5 +17,4 @@ app.use("/api",diagramRouter);
 app.get("/", (req, res) => {
   res.send("API Running...");
 });
-
 export default app;

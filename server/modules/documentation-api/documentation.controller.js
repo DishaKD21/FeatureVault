@@ -1,11 +1,10 @@
-import * as documentService from "../services/document.service.js";
+import * as documentService from "./documentation.service.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendSuccess } from "../../utils/sendSuccess.js";
 import { ApiError } from "../../utils/apiError.js";
-import { message } from "../../utils/messages.js";
-const messages = message.EntityMessages("Document");
+import { EntityMessages } from "../../utils/messages.js";
+const messages = EntityMessages("Document");
 
-sendSuccess(res, doc, msg.created);
 export const getAllDocuments = asyncHandler(async (req, res) => {
   const docs = await documentService.getAllDocuments();
   return sendSuccess(res, docs, messages.fetched);
@@ -14,7 +13,7 @@ export const getAllDocuments = asyncHandler(async (req, res) => {
 export const getDocumentById = asyncHandler(async (req, res) => {
   const doc = await documentService.getDocumentById(req.params.id);
   if (!doc) {
-    throw new ApiError(404, messages.notfound);
+    throw new ApiError(404, messages.notFound);
   }
   return sendSuccess(res, doc, messages.fetched);
 });

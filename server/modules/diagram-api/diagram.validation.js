@@ -6,7 +6,7 @@ export const createDiagramSchema = z.object({
   documentId: z.string().min(1).optional(),
 });
 
-export const updateDiagramSchema = z.createDiagramSchema.partial();
+export const updateDiagramSchema = createDiagramSchema.partial();
 export const diagramIdSchema = z.object({
-  ifd: z.string().min(1),  
+  id: z.string().min(1),  
 })

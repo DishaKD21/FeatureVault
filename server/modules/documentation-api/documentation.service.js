@@ -1,4 +1,4 @@
-import Document from "./documentation.model";
+import Document from "./documentation.model.js";
 
 export const createDocument = async (data) => {
   return await Document.create(data);

@@ -54,9 +54,9 @@ const documentSchema = new mongoose.Schema(
       empId: String,
       totalTime: Number,
     },
-    retrospectiveSection: {
+    retrospectiveSection: [{
       type: mongoose.Schema.Types.Mixed,
-    },
+    }],
   },
   { timestamps: true },
 );
