@@ -2,9 +2,9 @@ import * as service from "./diagram.service.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendSuccess } from "../../utils/sendSuccess.js";
 import { ApiError } from "../../utils/apiError.js";
-import { message } from "../../utils/messages.js";
+import { EntityMessages } from "../../utils/messages.js";
 
-const messages = message.EntityMessages("Diagram");
+const messages = EntityMessages("Diagram");
 
 export const createDiagram = asyncHandler(async (req, res) => {
   const diagram = await service.createDiagram(req.body);
