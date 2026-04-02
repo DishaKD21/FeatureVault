@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -18,6 +19,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import Sidebar from './sidebar';
+import { saveDiagram, loadDiagram } from '@/lib/diagramStore';
+import { postDiagram } from '@/lib/diagramApi';
 
 /* ─── ID generator ─── */
 let id = 0;
@@ -165,7 +168,64 @@ function Playground() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [mode, setMode] = useState('select');
   const [edgeSourceNode, setEdgeSourceNode] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { screenToFlowPosition, fitView } = useReactFlow();
+  const router = useRouter();
+
+  /* ─── Load existing diagram on mount ─── */
+  useEffect(() => {
+    const saved = loadDiagram();
+    if (saved?.diagramJson) {
+      const { nodes: savedNodes = [], edges: savedEdges = [] } = saved.diagramJson;
+      // Restore id counter to avoid collisions
+      const maxId = savedNodes.reduce((max, n) => {
+        const num = parseInt(n.id.replace('node_', ''), 10);
+        return isNaN(num) ? max : Math.max(max, num);
+      }, -1);
+      id = maxId + 1;
+      setNodes(savedNodes);
+      setEdges(savedEdges);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ─── Save diagram handler ─── */
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      // 1. Capture PNG from only the diagram canvas (no sidebar, controls, minimap)
+      let diagramImageDataUrl = null;
+      try {
+        // Find the ReactFlow viewport element (contains only nodes and edges, no UI)
+        const viewport = reactFlowWrapper.current?.querySelector('.react-flow__viewport');
+        if (viewport) {
+          diagramImageDataUrl = await toPng(viewport, {
+            backgroundColor: '#f9fafb',
+            pixelRatio: 2,
+            cacheBust: true,
+          });
+        }
+      } catch (imgErr) {
+        console.warn('[DiagramEditor] PNG export failed, continuing without image:', imgErr);
+      }
+
+      // 2. Serialize current graph
+      const diagramJson = { nodes, edges };
+
+      // 3. Persist locally (localStorage bridge)
+      saveDiagram({ diagramJson, diagramImageDataUrl });
+
+      // 4. Sync to backend (non-blocking stub — won't block navigation on failure)
+      postDiagram({ diagramJson, diagramImage: diagramImageDataUrl });
+
+      // 5. Navigate back
+      router.push('/create-doc');
+    } catch (err) {
+      console.error('[DiagramEditor] Save failed:', err);
+      setIsSaving(false);
+    }
+  }, [nodes, edges, isSaving, router]);
 
   /* ─── Edge style state ─── */
   const [edgeType, setEdgeType] = useState('smoothstep');
@@ -453,6 +513,8 @@ function Playground() {
         onDeleteSelected={handleDeleteSelected}
         onSelectAll={handleSelectAll}
         onFitView={handleFitView}
+        onSave={handleSave}
+        isSaving={isSaving}
         selectedCount={selectedCount}
         edgeSourceNode={edgeSourceNode}
         edgeType={edgeType}

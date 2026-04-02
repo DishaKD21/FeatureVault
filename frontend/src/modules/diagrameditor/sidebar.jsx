@@ -229,6 +229,8 @@ export default function Sidebar({
   onDeleteSelected,
   onSelectAll,
   onFitView,
+  onSave,
+  isSaving = false,
   selectedCount = { nodes: 0, edges: 0 },
   edgeSourceNode,
   /* Edge style props */
@@ -475,6 +477,37 @@ export default function Sidebar({
 
       {/* ─── Bottom Actions ─── */}
       <div className="px-3 py-3 border-t border-gray-100 space-y-2">
+
+        {/* Save & Return button */}
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className={`
+            w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150
+            ${isSaving
+              ? 'bg-emerald-100 text-emerald-400 cursor-not-allowed'
+              : 'bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.98] shadow-sm shadow-emerald-200'
+            }
+          `}
+        >
+          {isSaving ? (
+            <>
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
+              </svg>
+              Saving...
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save & Return
+            </>
+          )}
+        </button>
         {totalSelected > 0 && (
           <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 rounded-lg">
             <span className="text-[12px] text-gray-500">

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -14,9 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import MultiInput from "./MultiInput";
 import EditableTable from "./UserStoryTable";
+import { loadDiagram } from "@/lib/diagramStore";
 
 const DocForm = () => {
   const { register, setValue, watch } = useForm();
+  const router = useRouter();
 
   const startTime = watch("req.startTime");
   const endTime = watch("req.endTime");
@@ -24,8 +27,14 @@ const DocForm = () => {
   const featureEnd = watch("feature.endTime");
 
   const [mounted, setMounted] = useState(false);
+  const [savedDiagram, setSavedDiagram] = useState(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    const existing = loadDiagram();
+    if (existing) setSavedDiagram(existing);
+  }, []);
+
   if (!mounted) return null;
 
   return (
@@ -170,10 +179,52 @@ const DocForm = () => {
       </div>
 
       {/*  Design Diagram Section */}
-      <div className="border rounded-xl p-5 flex items-center justify-between">
-        <span className="font-medium">Design Diagram</span>
+      <div className="border rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="font-medium">Design Diagram</span>
 
-        <Button variant="secondary">Create your design diagram</Button>
+          {savedDiagram ? (
+            <Button
+              variant="outline"
+              onClick={() => router.push('/diagram-editor')}
+              className="gap-2"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Diagram
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => router.push('/diagram-editor')}
+              className="gap-2"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+              Create your design diagram
+            </Button>
+          )}
+        </div>
+
+        {/* PNG Preview (shown when diagram exists) */}
+        {savedDiagram?.diagramImageDataUrl && (
+          <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+            <img
+              src={savedDiagram.diagramImageDataUrl}
+              alt="Design Diagram Preview"
+              className="w-full h-auto object-contain max-h-80"
+              style={{ display: 'block' }}
+            />
+            <p className="text-[11px] text-gray-400 text-right px-3 py-1.5">
+              Last saved: {savedDiagram.savedAt ? new Date(savedDiagram.savedAt).toLocaleString() : 'Unknown'}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
