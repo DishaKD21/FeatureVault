@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./modules/userAuth-api/user.routes.js";
 import documentationRouter from "./modules/documentation-api/documentation.routes.js";
 import diagramRouter from "./modules/diagram-api/diagram.routes.js";
+import DocGenerationRouter from "./modules/doc-build/docBuild.route.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api", authRoutes);
 app.use("/api",documentationRouter);
 app.use("/api",diagramRouter);
+app.use("/api",DocGenerationRouter);
 app.get("/", (req, res) => {
   res.send("API Running...");
 });

@@ -481,12 +481,12 @@ function Playground() {
           defaultEdgeOptions={buildEdgeStyle()}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d1d5db" />
-          <Controls showInteractive={false} className="!rounded-xl !border !border-gray-200 !shadow-md !bg-white" />
+          <Controls showInteractive={false} className="rounded-xl! border! border-gray-200! shadow-md! bg-white!" />
           <MiniMap
             nodeStrokeColor="#6366f1"
             nodeColor="#e0e7ff"
             maskColor="rgba(255,255,255,0.85)"
-            className="!rounded-xl !border !border-gray-200 !shadow-md !bg-white/90"
+            className="rounded-xl! border! border-gray-200! shadow-md! bg-white/90!"
             style={{ height: 90, width: 130 }}
           />
         </ReactFlow>

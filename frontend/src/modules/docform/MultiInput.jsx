@@ -4,21 +4,26 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const MultiInput = ({ label }) => {
+const MultiInput = ({ label, onChange }) => {
   const [values, setValues] = useState([""]);
 
   const addField = () => {
-    setValues([...values, ""]);
+    const updated = [...values, ""];
+    setValues(updated);
+    onChange?.(updated);
   };
 
   const removeField = (index) => {
-    setValues(values.filter((_, i) => i !== index));
+    const updated = values.filter((_, i) => i !== index);
+    setValues(updated);
+    onChange?.(updated);
   };
 
   const handleChange = (index, val) => {
     const updated = [...values];
     updated[index] = val;
     setValues(updated);
+    onChange?.(updated);
   };
 
   return (

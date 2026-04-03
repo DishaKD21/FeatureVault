@@ -7,16 +7,14 @@ const documentSchema = new mongoose.Schema(
       discussion: String,
       endTime: Date,
     },
-    featureName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    feature: {
+    featureName: String,
     featureDescription: {
       startTime: Date,
       requirementAnalysis: String,
       endTime: Date,
-    },
+    }
+  },
     designDiagram: {
       diagramId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -25,20 +23,12 @@ const documentSchema = new mongoose.Schema(
       },
     },
     featureEstimate: {
-      type: mongoose.Schema.Types.Mixed,
-    },
-    userStoryDistribution: [
-      {
-        userStoryNumber: String,
-        employeeEmailId: {
-          type: String,
-          match: /.+\@.+\..+/,
-        },
-        developerName: String,
-        startTime: Date,
-        endTime: Date,
-      },
-    ],
+  userStoryDistribution: [
+    {
+      type: mongoose.Schema.Types.Mixed
+    }
+  ]
+},
     trackingAndReleaseDetails: [
       {
         userStoryNumber: String,

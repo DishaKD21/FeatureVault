@@ -7,11 +7,13 @@ import { EntityMessages } from "../../utils/messages.js";
 const messages = EntityMessages("Diagram");
 
 export const createDiagram = asyncHandler(async (req, res) => {
-  const diagram = await service.createDiagram(req.body);
+  const diagram = await service.createDiagram({
+    ...req.body,
+    image: req.file?.path,          
+  });
 
   return sendSuccess(res, diagram, messages.created, 201);
 });
-
 export const getAllDiagrams = asyncHandler(async (req, res) => {
   const diagrams = await service.getAllDiagrams();
 
