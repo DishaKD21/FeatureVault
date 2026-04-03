@@ -40,8 +40,8 @@ function EditableNode({ id, data, selected }) {
   const fontStyle = data.fontStyle || 'normal';
   const textDecoration = data.textDecoration || 'none';
   const textAlign = data.textAlign || 'center';
-  const color = data.color || '#1f2937';
-  const bgColor = data.bgColor || '#ffffff';
+  const color = data.color || '#c4f042';
+  const bgColor = data.bgColor || '#1B1B29';
 
   const handleDoubleClick = (e) => {
     e.stopPropagation();
@@ -76,8 +76,8 @@ function EditableNode({ id, data, selected }) {
         minWidth: 120,
         minHeight: 40,
         borderRadius: 8,
-        border: selected ? '2px solid #6366f1' : '1px solid #e5e7eb',
-        boxShadow: selected ? '0 0 0 3px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.06)',
+        border: selected ? '2px solid #c4f042' : '1px solid #2A2D3E',
+        boxShadow: selected ? '0 0 0 3px rgba(196, 240, 66, 0.15)' : 'shadow-lg',
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
@@ -133,7 +133,7 @@ function EditableNode({ id, data, selected }) {
           />
         ) : (
           <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {text || <span style={{ color: '#d1d5db' }}>Double-click to type...</span>}
+            {text || <span style={{ color: '#4A4D60' }}>Double-click to type...</span>}
           </span>
         )}
       </div>
@@ -167,6 +167,7 @@ function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [mode, setMode] = useState('select');
+  const [theme, setTheme] = useState('dark');
   const [edgeSourceNode, setEdgeSourceNode] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const { screenToFlowPosition, fitView } = useReactFlow();
@@ -186,7 +187,7 @@ function Playground() {
       setNodes(savedNodes);
       setEdges(savedEdges);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ─── Save diagram handler ─── */
@@ -231,7 +232,7 @@ function Playground() {
   const [edgeType, setEdgeType] = useState('smoothstep');
   const [edgeLineStyle, setEdgeLineStyle] = useState('solid');
   const [edgeAnimated, setEdgeAnimated] = useState(true);
-  const [edgeColor, setEdgeColor] = useState('#6366f1');
+  const [edgeColor, setEdgeColor] = useState('#c4f042');
 
   /* ─── Selected counts ─── */
   const selectedCount = useMemo(() => ({
@@ -253,8 +254,8 @@ function Playground() {
       fontStyle: selectedNode.data.fontStyle || 'normal',
       textDecoration: selectedNode.data.textDecoration || 'none',
       textAlign: selectedNode.data.textAlign || 'center',
-      color: selectedNode.data.color || '#1f2937',
-      bgColor: selectedNode.data.bgColor || '#ffffff',
+      color: selectedNode.data.color || '#c4f042',
+      bgColor: selectedNode.data.bgColor || '#1B1B29',
     };
   }, [selectedNode]);
 
@@ -356,7 +357,7 @@ function Playground() {
         setNodes((nds) =>
           nds.map((n) =>
             n.id === node.id
-              ? { ...n, style: { ...n.style, boxShadow: '0 0 0 3px #6366f1' } }
+              ? { ...n, style: { ...n.style, boxShadow: '0 0 0 3px #c4f042' } }
               : n
           )
         );
@@ -453,10 +454,10 @@ function Playground() {
     [setNodes]
   );
 
-  const cursorClass = mode === 'add-edge' ? 'cursor-pointer' : '';
+  const cursorClass = mode === 'add-edge' ? 'cursor-grab' : mode === 'pan' ? 'cursor-grab active:cursor-grabbing' : '';
 
   return (
-    <div className="flex w-screen h-screen bg-gray-50" onKeyDown={onKeyDown} tabIndex={0}>
+    <div className={`flex w-screen h-screen ${theme === 'dark' ? 'bg-[#0A0A10]' : 'bg-gray-50'}`} onKeyDown={onKeyDown} tabIndex={0}>
       <div className={`flex-1 relative ${cursorClass}`} ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodesWithCallbacks}
@@ -475,46 +476,58 @@ function Playground() {
           deleteKeyCode={['Delete', 'Backspace']}
           multiSelectionKeyCode="Shift"
           selectionOnDrag={mode === 'select'}
-          panOnDrag={mode === 'select' ? [1] : false}
+          panOnDrag={mode === 'pan' ? true : (mode === 'select' ? [1] : false)}
           selectNodesOnDrag={mode === 'select'}
           connectionLineStyle={{ stroke: edgeColor, strokeWidth: 2 }}
           defaultEdgeOptions={buildEdgeStyle()}
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d1d5db" />
-          <Controls showInteractive={false} className="!rounded-xl !border !border-gray-200 !shadow-md !bg-white" />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color={theme === 'dark' ? "#2A2D3E" : "#d1d5db"} />
+          <Controls showInteractive={false} className={`!rounded-xl !border !shadow-lg ${theme === 'dark' ? '!border-white/10 !bg-[#1B1B29] !fill-gray-400 [&_button:hover]:!bg-white/5' : '!border-gray-200 !bg-white !fill-gray-600 [&_button:hover]:!bg-gray-50'}`} />
           <MiniMap
-            nodeStrokeColor="#6366f1"
-            nodeColor="#e0e7ff"
-            maskColor="rgba(255,255,255,0.85)"
-            className="!rounded-xl !border !border-gray-200 !shadow-md !bg-white/90"
+            nodeStrokeColor="#c4f042"
+            nodeColor={theme === 'dark' ? '#303352' : '#e0e7ff'}
+            maskColor={theme === 'dark' ? "rgba(10,10,16,0.85)" : "rgba(255,255,255,0.85)"}
+            className={`!rounded-xl !border !shadow-lg ${theme === 'dark' ? '!border-white/10 !bg-[#1B1B29]' : '!border-gray-200 !bg-white/90'}`}
             style={{ height: 90, width: 130 }}
           />
         </ReactFlow>
 
-        {/* Mode indicator */}
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 text-[12px] font-medium text-gray-600">
-          <span className={`w-2 h-2 rounded-full ${mode === 'select' ? 'bg-gray-400' : 'bg-emerald-500'}`} />
-          {mode === 'select' && 'Select Mode'}
-          {mode === 'add-edge' && (edgeSourceNode ? 'Click target node...' : 'Click source node...')}
-          {mode !== 'select' && (
-            <button
-              onClick={() => handleModeChange('select')}
-              className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              ✕
-            </button>
-          )}
+        {/* Top Right Controls */}
+        <div className="absolute top-6 right-6 z-10 flex items-center gap-3">
+          <button
+            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+            className={`flex items-center justify-center w-11 h-11 rounded-2xl backdrop-blur-xl border transition-all ${theme === 'dark' ? 'bg-[#1B1B29]/95 border-white/5 text-gray-300 hover:text-white shadow-[0_8px_40px_rgba(0,0,0,0.2)]' : 'bg-white/95 border-gray-200 text-gray-600 hover:text-gray-900 shadow-xl'}`}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? (
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
+          </button>
+          
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition-all shadow-xl ${isSaving ? 'bg-emerald-500/50 text-white/70 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20 active:scale-95'}`}
+          >
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+             </svg>
+             {isSaving ? 'Saving...' : 'Save & Return'}
+          </button>
         </div>
       </div>
 
       <Sidebar
+        theme={theme}
         mode={mode}
         setMode={handleModeChange}
         onDeleteSelected={handleDeleteSelected}
         onSelectAll={handleSelectAll}
         onFitView={handleFitView}
-        onSave={handleSave}
-        isSaving={isSaving}
         selectedCount={selectedCount}
         edgeSourceNode={edgeSourceNode}
         edgeType={edgeType}
