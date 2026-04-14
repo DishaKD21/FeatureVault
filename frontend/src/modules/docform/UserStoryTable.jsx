@@ -8,7 +8,33 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 
-export default function EditableTable({ onChange }) {
+/**
+ * Helper to convert JSON array of objects back to HTML table for Tiptap
+ */
+const jsonToHtmlTable = (data) => {
+  if (!data || !Array.isArray(data) || data.length === 0) return "";
+
+  const headers = Object.keys(data[0]);
+  
+  let html = "<table><thead><tr>";
+  headers.forEach(h => {
+    html += `<th>${h}</th>`;
+  });
+  html += "</tr></thead><tbody>";
+  
+  data.forEach(row => {
+    html += "<tr>";
+    headers.forEach(h => {
+      html += `<td>${row[h] || ""}</td>`;
+    });
+    html += "</tr>";
+  });
+  
+  html += "</tbody></table>";
+  return html;
+};
+
+export default function EditableTable({ value, onChange }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [tableSize, setTableSize] = useState({ rows: 0, cols: 0 });
   const [tableCreated, setTableCreated] = useState(false);
@@ -128,6 +154,20 @@ export default function EditableTable({ onChange }) {
     window.addEventListener("click", close);
     return () => window.removeEventListener("click", close);
   }, []);
+
+  // HYDRATION: Sync editor content with value prop
+  const isFirstLoad = useRef(true);
+  useEffect(() => {
+    if (!editor || !value) return;
+    
+    // Only hydrate if we haven't loaded yet or if external data changed significantly
+    if (isFirstLoad.current && value.length > 0) {
+      console.log("[UserStoryTable] Hydrating table content...");
+      const html = jsonToHtmlTable(value);
+      editor.commands.setContent(html);
+      isFirstLoad.current = false;
+    }
+  }, [editor, value]);
 
   const extractTableData = () => {
     const table = wrapRef.current?.querySelector("table");

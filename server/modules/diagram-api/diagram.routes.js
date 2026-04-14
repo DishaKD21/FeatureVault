@@ -14,9 +14,10 @@ const upload = multer({ storage });
 const diagramRouter = Router();
 
 diagramRouter.get("/diagram", controller.getAllDiagrams);
+diagramRouter.get("/diagram/by-document/:documentId", validate(zod.documentIdSchema, "params"), controller.getDiagramByDocumentId);
 diagramRouter.get("/diagram/:id",validate(zod.diagramIdSchema, "params"),controller.getDiagramById);
 diagramRouter.post("/diagram/create", upload.single("image"), validate(zod.createDiagramSchema), controller.createDiagram);
-diagramRouter.put("/diagram/update/:id", validate(zod.diagramIdSchema, "params"),validate(zod.updateDiagramSchema),controller.updateDiagram);
+diagramRouter.put("/diagram/update/:id", upload.single("image"), validate(zod.diagramIdSchema, "params"),validate(zod.updateDiagramSchema),controller.updateDiagram);
 diagramRouter.delete("/diagram/delete/:id",validate(zod.diagramIdSchema, "params"),controller.deleteDiagram);
 
 export default diagramRouter;

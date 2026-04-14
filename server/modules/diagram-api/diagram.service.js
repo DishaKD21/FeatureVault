@@ -12,6 +12,10 @@ export const getDiagramById = async (id) => {
   return await Diagram.findById(id);
 };
 
+export const getDiagramByDocumentId = async (documentId) => {
+  return await Diagram.findOne({ documentId });
+};
+
 export const updateDiagram = async (id, data) => {
   return await Diagram.findByIdAndUpdate(id, data, { new: true });
 };

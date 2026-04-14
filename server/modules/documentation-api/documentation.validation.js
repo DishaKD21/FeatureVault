@@ -1,11 +1,11 @@
 import * as z from "zod";
+
 export const createDocumentSchema = z.object({
   requirementElicitation: z.object({
     startTime: z.string(),
     discussion: z.string(),
     endTime: z.string(),
   }),
-
   feature: z.object({
     featureName: z.string(),
     featureDescription: z.object({
@@ -14,15 +14,12 @@ export const createDocumentSchema = z.object({
       endTime: z.string(),
     }),
   }),
-
   designDiagram: z.object({
     diagramId: z.string().min(1),
   }),
-
   featureEstimate: z.object({
     userStoryDistribution: z.array(z.any()),
   }),
-
   trackingAndReleaseDetails: z.array(
     z.object({
       userStoryNumber: z.string(),
@@ -33,16 +30,17 @@ export const createDocumentSchema = z.object({
       environmentDeployLinks: z.array(z.string()),
     })
   ),
-
   whoCreatedIt: z.object({
     name: z.string(),
     empId: z.string(),
     totalTime: z.number(),
   }),
-
   retrospectiveSection: z.array(z.any()),
 });
-export const updateDocumentSchema = z.object({
+
+export const createDraftSchema = z.object({});
+
+export const updateDraftSchema = z.object({
   requirementElicitation: z.object({
     startTime: z.string().optional(),
     discussion: z.string().optional(),
@@ -59,7 +57,7 @@ export const updateDocumentSchema = z.object({
   }).optional(),
 
   designDiagram: z.object({
-    diagramId: z.string().min(1),
+    diagramId: z.string().optional(),
   }).optional(),
 
   featureEstimate: z.object({
@@ -68,23 +66,25 @@ export const updateDocumentSchema = z.object({
 
   trackingAndReleaseDetails: z.array(
     z.object({
-      userStoryNumber: z.string(),
-      userStoryLink: z.string(),
-      prLinks: z.array(z.string()),
-      codeDescription: z.string(),
-      pipelineBuildLinks: z.array(z.string()),
-      environmentDeployLinks: z.array(z.string()),
+      userStoryNumber: z.string().optional(),
+      userStoryLink: z.string().optional(),
+      prLinks: z.array(z.string()).optional(),
+      codeDescription: z.string().optional(),
+      pipelineBuildLinks: z.array(z.string()).optional(),
+      environmentDeployLinks: z.array(z.string()).optional(),
     })
   ).optional(),
 
   whoCreatedIt: z.object({
-    name: z.string(),
-    empId: z.string(),
-    totalTime: z.number(),
+    name: z.string().optional(),
+    empId: z.string().optional(),
+    totalTime: z.number().optional(),
   }).optional(),
 
   retrospectiveSection: z.array(z.any()).optional(),
 });
+export const submitDocumentSchema = createDocumentSchema;
+
 export const documentIdSchema = z.object({
-    id:z.string().min(1),
-})
+  id: z.string().min(1),
+}); 

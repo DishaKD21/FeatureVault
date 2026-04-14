@@ -13,7 +13,7 @@ const Footer = () => {
           
           {/* Left */}
           <div className="flex-1">
-           <Image href={logo}/>
+           <Image src={logo} alt="FeatureVault logo" width={150} height={40} className="h-auto w-auto" />
             <p className="text-gray-700">
               Create structured feature documentation and system diagrams
               quickly and efficiently.

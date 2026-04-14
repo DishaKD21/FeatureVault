@@ -7,7 +7,7 @@ const Navbar = () => {
     <nav className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
       {/* Left - Logo */}
       <div className="flex items-center gap-2 font-semibold text-lg">
-        <Image src={logo} height={150} width={150} alt="Logo"></Image>
+        <Image src={logo} height={50} width={50} alt="FeatureVault logo"/>
       </div>
 
       {/* Center - Links */}

@@ -1,0 +1,255 @@
+[
+  {
+    "id": "69d9ed2ef3bf82fe7e49f24a",
+    "nodes": [
+      {
+        "id": "node_6",
+        "label": "UI - Add change log button",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_7",
+        "label": "Feature Offerings Page",
+        "nodeType": "input"
+      },
+      {
+        "id": "node_8",
+        "label": "Collect all the below.\nFeature Offering Name, Feature Offering Description - Feature_Set Table\nUpdated Date, Updated By, Change Type - Audit_Revision_Info\nFeature Category, Feature, Feature Description - Feature Table\nCreate table - Feature_Set_Feature_Map_AUD similar to GROUP_USER_MAP_AUD and save the required details.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_9",
+        "label": "Create new domain class with required details which need to be shown in CSV",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_10",
+        "label": "Create new API in accessV2. In API Create a query to fetch change log related details from contract info audit table generate change log for Contract Info screen.\nFeature offering change log endpoint - /featureoffering/{featureSetId}/logs \nCreate new API in accessV2. In API Create a query to fetch change log related details from contract info audit table generate change log for Contract Info screen.\nFeature offering change log endpoint - /featureoffering/{featureSetId}/logs",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_12",
+        "label": "When feature offering screen Change Log button is clicked export all the required change log details in CSV",
+        "nodeType": "output"
+      }
+    ],
+    "edges": [
+      {
+        "source": "node_7",
+        "target": "node_6",
+        "label": ""
+      },
+      {
+        "source": "node_6",
+        "target": "node_8",
+        "label": ""
+      },
+      {
+        "source": "node_8",
+        "target": "node_9",
+        "label": ""
+      },
+      {
+        "source": "node_9",
+        "target": "node_10",
+        "label": ""
+      },
+      {
+        "source": "node_10",
+        "target": "node_12",
+        "label": ""
+      }
+    ]
+  },
+  {
+    "id": "69d9f013f3bf82fe7e49f24c",
+    "nodes": [
+      {
+        "id": "node_13",
+        "label": "UI – Change Log button.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_14",
+        "label": "Contract Info Page",
+        "nodeType": "input"
+      },
+      {
+        "id": "node_15",
+        "label": "Collect all the below.\nCustomer Code, Customer Name - Fetch from metadata service and store in Feature_Set_Company_Map_AUD\nUpdated Date, Updated By, Change Type – Audit_Revision_Info\nFeature Offering Name, Feature Offering Description - Feature_Set Table\nCreate table - Feature_Set_Company_Map_AUD similar to GROUP_USER_MAP_AUD and save the required details for change log",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_16",
+        "label": "Create new domain class with required details which need to be shown in CSV",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_17",
+        "label": "Create new API in accessV2.\nIn API Create a query to fetch change log related details from contract info audit table generate change log for Contract Info screen. \nContract Info change log endpoint - /contractInfo/{customerCode}/logs",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_19",
+        "label": "When Change Log button is clicked for Contract Info screen export all the required change log details in CSV",
+        "nodeType": "output"
+      }
+    ],
+    "edges": [
+      {
+        "source": "node_13",
+        "target": "node_15",
+        "label": ""
+      },
+      {
+        "source": "node_14",
+        "target": "node_13",
+        "label": ""
+      },
+      {
+        "source": "node_15",
+        "target": "node_16",
+        "label": ""
+      },
+      {
+        "source": "node_16",
+        "target": "node_17",
+        "label": ""
+      },
+      {
+        "source": "node_17",
+        "target": "node_19",
+        "label": ""
+      }
+    ]
+  },
+  {
+    "id": "69d9f21bf3bf82fe7e49f24e",
+    "nodes": [
+      {
+        "id": "node_20",
+        "label": "Access control lib\nCreate new DTO which has documentIdentifier, DocumentType, model, sensitivity, \nPublication Type, Supplement Type, Product Format and Volume Type\nAccessv2\nIn getEntitledCustomers () of ProductEntitlementService.java based on toggle(true) call new method removeConditionalPolicyCustomers\nWe will build ConditionalBusinessPolicySearchRequestDTO with policy, status, operator,\ndocumentIdentifier, DocumentType, model, sensitivity, Publication Type, Supplement Type, Product Format and Volume Type from ProductInstanceDTO.\nFrom the returned response of conditionalBusinessPoliciesDto we will get bsd \nIf bsd is empty or all \nthen clear the entitlement list\nelse \nremove bsd from entitlement list\n                               In getEntitlement of UserEntitlementServiceImpl.java\nBased on toggle(true) call new endpoint /fetchCBPBySearchRequestDTO with ConditionalBusinessPolicySearchRequestDTO having policy, status, operator,\ndocumentIdentifier, DocumentType, model, sensitivity, \nPublication Type, Supplement Type, Product Format and Volume Type\n also need to pass all fields to endpoint “/getEntitlement” from dataadapter",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_21",
+        "label": "Tbh_config_dev and tbh_config_prod\nAdd feature toggle in accessv2, productv2, metadata, data adapter and dataadmin yml.",
+        "nodeType": "input"
+      },
+      {
+        "id": "node_22",
+        "label": "ProductV2 \nIn canAccessBasedOnControlAccessPolicy of ProductAuthorizationService.java\nBased on toggle(true) call endpoint pass new fields also \nPublication Type, Supplement Type, Product Format and Volume Type to \n/fetchCBPBySearchRequestDTO with ConditionalBusinessPolicySearchRequestDTO having policy, status, operator,\ndocumentIdentifier, DocumentType, model, sensitivity, Publication Type, Supplement Type, Product Format and Volume Type\n from ProductInstance \n\n\nIn handleAccessControlPolicyUpdate of ConditionalBusinessPolicyService.java \nAt least one of the fields in conditionalBusinessPoliciesDto should have value. \nIf not, then do nothing\nIf yes\nAlong with document Identifier, sensitivity, document Type and Model also check\nPublication Type, Supplement Type, Product Format and Volume Type\n if are present. If yes, then get product instance Id from productInstanceRepository(Create specification query) based on these fields and trigger reindexing for those pids.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_23",
+        "label": "Metadata\nIn endpoint fetchCBPBySearchRequestDTO \nin ConditionalBusinessPolicyController.java. build search Request Specification query for \nPublication Type, Supplement Type, Product Format and Volume Type. Also handle wildcard.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_24",
+        "label": "Data Admin\nIn getDeliveryDocumentsForQuickView() of DataAdminController.java and getDeliveryDocumentCount() of DataAdminEntitlementServiceImpl.java\nWhile fetching data from deliveryDocumentRepository also have condition of record Not In \nPublication Type, Supplement Type, Product Format and Volume Type.\n (Create specification query)",
+        "nodeType": "default"
+      }
+    ],
+    "edges": [
+      {
+        "source": "node_21",
+        "target": "node_20",
+        "label": ""
+      },
+      {
+        "source": "node_20",
+        "target": "node_22",
+        "label": ""
+      },
+      {
+        "source": "node_22",
+        "target": "node_23",
+        "label": ""
+      },
+      {
+        "source": "node_23",
+        "target": "node_24",
+        "label": ""
+      }
+    ]
+  },
+  {
+    "id": "69d9f464f3bf82fe7e49f250",
+    "nodes": [
+      {
+        "id": "node_25",
+        "label": "nMPT Exports, All customers’ exports",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_26",
+        "label": "Offline Manager",
+        "nodeType": "input"
+      },
+      {
+        "id": "node_27",
+        "label": "Legacy exports",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_28",
+        "label": "TBR Extractor service\nnmptOfflineExports, allNMPTExportsRequest -> pull package details from extractor db and populate it in nMPT export and all customers’ exports screens\nHandle the event received from tbr_packager service and update the smartsync package info in extractor DB (create a new child table for offline_export_request_tracker to store SS info)",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_29",
+        "label": "Offline-legacy-exports  endpoint to pull the ss package info from ifim DB and populate it in legacy export screen.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_30",
+        "label": "TBR Extractor db",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_32",
+        "label": "TBR_packager Service\nSend an event with SS package info to tbr_extractor whenever the smartsync package creation gets completed.",
+        "nodeType": "default"
+      },
+      {
+        "id": "node_33",
+        "label": "IFIM db",
+        "nodeType": "output"
+      }
+    ],
+    "edges": [
+      {
+        "source": "node_26",
+        "target": "node_25",
+        "label": ""
+      },
+      {
+        "source": "node_26",
+        "target": "node_27",
+        "label": ""
+      },
+      {
+        "source": "node_27",
+        "target": "node_29",
+        "label": ""
+      },
+      {
+        "source": "node_29",
+        "target": "node_33",
+        "label": ""
+      },
+      {
+        "source": "node_30",
+        "target": "node_32",
+        "label": ""
+      },
+      {
+        "source": "node_28",
+        "target": "node_30",
+        "label": ""
+      }
+    ]
+  }
+]

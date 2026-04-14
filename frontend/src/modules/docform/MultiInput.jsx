@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const MultiInput = ({ label, onChange }) => {
-  const [values, setValues] = useState([""]);
+const MultiInput = ({ label, value, onChange }) => {
+  const [values, setValues] = useState(value || [""]);
+
+  // Sync internal state if prop changes (hydration)
+  useEffect(() => {
+    if (value && JSON.stringify(value) !== JSON.stringify(values)) {
+      setValues(value);
+    }
+  }, [value]);
 
   const addField = () => {
     const updated = [...values, ""];

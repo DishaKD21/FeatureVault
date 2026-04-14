@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -15,19 +15,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import MultiInput from "./MultiInput";
 import EditableTable from "./UserStoryTable";
+import { getDiagramByDocumentId } from "@/lib/diagramApi";
+import {
+  createDraft,
+  getDocumentById,
+  updateDraft,
+} from "@/lib/documentationApi";
 
 const DocForm = () => {
-  const { register, setValue, watch, handleSubmit } = useForm();
+  const { register, setValue, watch, handleSubmit, reset } = useForm();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const startTime = watch("requirementElicitation.startTime");
   const endTime = watch("requirementElicitation.endTime");
-  const featureStart = watch(
-    "feature.featureDescription.startTime",
-  );
+  const featureStart = watch("feature.featureDescription.startTime");
   const featureEnd = watch("feature.featureDescription.endTime");
   const [mounted, setMounted] = useState(false);
   const [savedDiagram, setSavedDiagram] = useState(null);
   const [diagramId, setDiagramId] = useState(null);
+  const [docId, setDocId] = useState(null);
+  const [isLoadingDiagram, setIsLoadingDiagram] = useState(false);
+  const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [userStories, setUserStories] = useState([]);
   const [retrospective, setRetrospective] = useState([]);
   const [trackingList, setTrackingList] = useState([
@@ -40,14 +48,14 @@ const DocForm = () => {
       environmentDeployLinks: [],
     },
   ]);
-  const onSubmit = async (data) => {
-    const payload = {
+  // Helper to construct the standardized payload from current form state
+  const getPayload = (data) => {
+    return {
       requirementElicitation: {
         startTime: data.requirementElicitation?.startTime?.toISOString(),
         endTime: data.requirementElicitation?.endTime?.toISOString(),
         discussion: data.requirementElicitation?.discussion,
       },
-
       feature: {
         featureName: data.feature?.featureName,
         featureDescription: {
@@ -57,54 +65,183 @@ const DocForm = () => {
             data.feature?.featureDescription?.requirementAnalysis,
         },
       },
-
       designDiagram: {
-        diagramId: data.designDiagram?.diagramId,
+        diagramId: diagramId || null,
       },
-
       featureEstimate: {
         userStoryDistribution: userStories,
       },
       trackingAndReleaseDetails: trackingList,
-
       whoCreatedIt: {
         name: data.whoCreatedIt?.name,
         empId: data.whoCreatedIt?.empId,
         totalTime: Number(data.whoCreatedIt?.totalTime || 0),
       },
-
       retrospectiveSection: retrospective,
     };
-
-    console.log("FINAL PAYLOAD:", payload);
-
-    await fetch("http://localhost:5000/api/documentation/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
   };
-  useEffect(() => {
-    const id = localStorage.getItem("diagramId");
 
-    if (!id) {
-      setMounted(true);
-      return;
+  const onSubmit = async (data) => {
+    if (!docId) return;
+
+    const payload = getPayload(data);
+    console.log("[DocForm] Submitting final update for docId:", docId, payload);
+
+    try {
+      await updateDraft(docId, payload);
+      // Optional: Navigate to a success page or dashboard
+      console.log("[DocForm] Final save successful");
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("[DocForm] Submit failed:", err);
+      alert("Failed to submit: " + err.message);
     }
+  };
 
-    fetch(`http://localhost:5000/api/diagram/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSavedDiagram(data.data);
-        setDiagramId(data.data._id);
+  /**
+   * DRAFT FLOW + URL SYNC: Read documentId from URL on every searchParams change.
+   * If no `id` in URL, auto-create a draft and redirect.
+   * If `id` exists, set docId state.
+   *
+   * WHY searchParams dependency: After router.replace(), Next.js App Router does
+   * a soft navigation (no re-mount). Without this dependency, docId stays null.
+   */
+  /**
+   * DRAFT FLOW + HYDRATION: Read documentId from URL and load existing data.
+   */
+  useEffect(() => {
+    const initForm = async () => {
+      const docIdParam = searchParams.get("id");
+      console.log("[DocForm] useEffect triggered — URL id =", docIdParam);
 
-        setValue("designDiagram.diagramId", data.data._id);
-      })
-      .finally(() => setMounted(true));
-  }, []);
-     
+      if (docIdParam) {
+        setDocId(docIdParam);
+
+        // HYDRATION: Load existing document data
+        console.log("[DocForm] Hydrating form for docId:", docIdParam);
+        try {
+          const response = await getDocumentById(docIdParam);
+          const doc = response.data;
+
+          if (doc) {
+            console.log("[DocForm] Document data loaded:", doc);
+
+            reset({
+              requirementElicitation: {
+                startTime: doc.requirementElicitation?.startTime
+                  ? new Date(doc.requirementElicitation.startTime)
+                  : null,
+                endTime: doc.requirementElicitation?.endTime
+                  ? new Date(doc.requirementElicitation.endTime)
+                  : null,
+                discussion: doc.requirementElicitation?.discussion || "",
+              },
+
+              feature: {
+                featureName: doc.feature?.featureName || "",
+                featureDescription: {
+                  startTime: doc.feature?.featureDescription?.startTime
+                    ? new Date(doc.feature.featureDescription.startTime)
+                    : null,
+                  endTime: doc.feature?.featureDescription?.endTime
+                    ? new Date(doc.feature.featureDescription.endTime)
+                    : null,
+                  requirementAnalysis:
+                    doc.feature?.featureDescription?.requirementAnalysis || "",
+                },
+              },
+
+              designDiagram: {
+                diagramId: doc.designDiagram?.diagramId || "",
+              },
+
+              whoCreatedIt: {
+                name: doc.whoCreatedIt?.name || "",
+                empId: doc.whoCreatedIt?.empId || "",
+                totalTime: doc.whoCreatedIt?.totalTime || 0,
+              },
+            });
+
+            // These stay as state (correct already)
+            setUserStories(doc.featureEstimate?.userStoryDistribution || []);
+            setTrackingList(doc.trackingAndReleaseDetails || []);
+            setRetrospective(doc.retrospectiveSection || []);
+
+            if (doc.designDiagram?.diagramId) {
+              setDiagramId(doc.designDiagram.diagramId);
+            }
+          }
+        } catch (err) {
+          console.error("[DocForm] Hydration failed:", err);
+        }
+
+        setMounted(true);
+        return;
+      }
+
+      // No id in URL → create a draft document
+      console.log("[DocForm] No id in URL, creating draft...");
+      setIsCreatingDraft(true);
+
+      try {
+        const response = await createDraft();
+        if (response?.data?._id) {
+          const newDocId = response.data._id;
+          setDocId(newDocId);
+          setMounted(true);
+          router.replace(`/create-doc?id=${newDocId}`);
+        } else {
+          setMounted(true);
+        }
+      } catch (err) {
+        console.error("[DocForm] Failed to create draft:", err);
+        setMounted(true);
+      } finally {
+        setIsCreatingDraft(false);
+      }
+    };
+
+    initForm();
+  }, [searchParams, router, reset]);
+
+  /**
+   * DIAGRAM LOADING: Once docId is set, load existing diagram for preview
+   */
+  useEffect(() => {
+    if (!docId) return;
+
+    const loadDiagram = async () => {
+      setIsLoadingDiagram(true);
+      console.log("[DocForm] Loading diagram for docId:", docId);
+
+      try {
+        const response = await getDiagramByDocumentId(docId);
+        console.log("[DocForm] getDiagramByDocumentId response:", response);
+
+        if (response && response.data) {
+          console.log("[DocForm] Found existing diagram:", response.data._id);
+          setSavedDiagram(response.data);
+          setDiagramId(response.data._id);
+          setValue("designDiagram.diagramId", response.data._id);
+        } else {
+          console.log(
+            "[DocForm] No diagram found for this document (normal for new docs)",
+          );
+        }
+      } catch (err) {
+        console.log(
+          "[DocForm] Error loading diagram (may be 404 for new doc):",
+          err.message,
+        );
+      } finally {
+        setIsLoadingDiagram(false);
+        console.log("[DocForm] Diagram loading complete");
+      }
+    };
+
+    loadDiagram();
+  }, [docId, setValue]);
+
   const addTracking = () => {
     setTrackingList((prev) => [
       ...prev,
@@ -118,6 +255,36 @@ const DocForm = () => {
       },
     ]);
   };
+
+  const handleTrackingChange = (index, field, value) => {
+    setTrackingList((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleDiagramNavigation = () => {
+    if (docId) {
+      const navUrl = `/diagram-editor?docId=${docId}`;
+      router.push(navUrl);
+    } else {
+      router.push(`/diagram-editor`);
+    }
+  };
+
+  // Show loading while creating draft
+  if (isCreatingDraft) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
+          <p className="text-gray-500">Creating document draft...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="p-10 max-w-4xl mx-auto space-y-10">
@@ -274,34 +441,47 @@ const DocForm = () => {
 
         <div className="border rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="font-medium">Design Diagram</span>
+            <div>
+              <span className="font-medium">Design Diagram</span>
+              <p className="text-xs text-gray-400 mt-1">
+                DocId: {docId || "N/A"} | Diagram: {diagramId || "None"}
+              </p>
+            </div>
 
-            {savedDiagram?.image ? (
+            {isLoadingDiagram ? (
+              <span className="text-sm text-gray-500">Loading diagram...</span>
+            ) : savedDiagram?.image ? (
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => router.push("/diagram-editor")}
+                onClick={handleDiagramNavigation}
                 className="gap-2"
               >
-                Edit Diagram
+                ✏️ Edit Diagram
               </Button>
             ) : (
               <Button
+                type="button"
                 variant="secondary"
-                onClick={() => router.push("/diagram-editor")}
+                onClick={handleDiagramNavigation}
                 className="gap-2"
               >
-                Create your design diagram
+                ➕ Create Diagram
               </Button>
             )}
           </div>
 
           {/* Preview */}
-          {savedDiagram?.image && (
+          {savedDiagram?.image && !isLoadingDiagram && (
             <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2">
               <img
                 src={`http://localhost:5000/${savedDiagram.image}`}
-                alt="diagram"
+                alt="diagram preview"
                 className="w-full h-auto object-contain max-h-80 rounded-md"
+                onError={(e) => {
+                  console.warn("[DocForm] Failed to load diagram image");
+                  e.currentTarget.style.display = "none";
+                }}
               />
             </div>
           )}
@@ -311,7 +491,7 @@ const DocForm = () => {
 
           <div>
             <p className="font-medium mb-2">User Story Distribution</p>
-            <EditableTable onChange={setUserStories} />
+            <EditableTable value={userStories} onChange={setUserStories} />
           </div>
         </div>
 
@@ -351,6 +531,7 @@ const DocForm = () => {
               {/* PR Links */}
               <MultiInput
                 label="PR Links"
+                value={item.prLinks}
                 onChange={(val) => handleTrackingChange(index, "prLinks", val)}
               />
 
@@ -373,6 +554,7 @@ const DocForm = () => {
               {/* Pipeline Links */}
               <MultiInput
                 label="Pipeline Build Links"
+                value={item.pipelineBuildLinks}
                 onChange={(val) =>
                   handleTrackingChange(index, "pipelineBuildLinks", val)
                 }
@@ -381,6 +563,7 @@ const DocForm = () => {
               {/* Environment Links */}
               <MultiInput
                 label="Environment Deploy Links"
+                value={item.environmentDeployLinks}
                 onChange={(val) =>
                   handleTrackingChange(index, "environmentDeployLinks", val)
                 }
@@ -396,40 +579,35 @@ const DocForm = () => {
 
         {/*  Who Created It */}
         <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-  <h2 className="text-lg font-semibold">Who Created It</h2>
+          <h2 className="text-lg font-semibold">Who Created It</h2>
 
-  <div className="grid grid-cols-3 gap-6">
-    <div>
-      <label className="font-medium">Name</label>
-      <Input
-        className="mt-2"
-        {...register("whoCreatedIt.name")}
-      />
-    </div>
+          <div className="grid grid-cols-3 gap-6">
+            <div>
+              <label className="font-medium">Name</label>
+              <Input className="mt-2" {...register("whoCreatedIt.name")} />
+            </div>
 
-    <div>
-      <label className="font-medium">Emp ID</label>
-      <Input
-        className="mt-2"
-        {...register("whoCreatedIt.empId")}
-      />
-    </div>
+            <div>
+              <label className="font-medium">Emp ID</label>
+              <Input className="mt-2" {...register("whoCreatedIt.empId")} />
+            </div>
 
-    <div>
-      <label className="font-medium">Total Time</label>
-      <Input
-        type="number"
-        className="mt-2"
-        {...register("whoCreatedIt.totalTime")}
-      />
-    </div>
-  </div>
-</div>
+            <div>
+              <label className="font-medium">Total Time</label>
+              <Input
+                type="number"
+                className="mt-2"
+                {...register("whoCreatedIt.totalTime")}
+              />
+            </div>
+          </div>
+        </div>
+
         {/*  Retrospective Section */}
         <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
           <h2 className="text-lg font-semibold">Retrospection Section</h2>
 
-          <EditableTable onChange={setRetrospective} />
+          <EditableTable value={retrospective} onChange={setRetrospective} />
         </div>
         {/* Submit */}
         <Button type="submit" className="w-full h-11 text-base">

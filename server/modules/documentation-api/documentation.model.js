@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const documentSchema = new mongoose.Schema(
   {
+     status: {
+      type: String,
+      enum: ["draft", "completed"],
+      default: "draft"
+    },
     requirementElicitation: {
       startTime: Date,
       discussion: String,
