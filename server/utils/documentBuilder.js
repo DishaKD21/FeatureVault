@@ -63,10 +63,20 @@ function createDynamicTable(headers = [], data = []) {
   });
 }
 
-async function getImageBuffer(url) {
-  const res = await fetch(url);
-  const buffer = await res.arrayBuffer();
-  return Buffer.from(buffer);
+import fs from "fs";
+import path from "path";
+
+async function getImageBuffer(imagePath) {
+  // If it's a full URL, we could fetch it, but diagram.image is stored as relative path like "upload/filename"
+  if (imagePath.startsWith("http")) {
+    const res = await fetch(imagePath);
+    const buffer = await res.arrayBuffer();
+    return Buffer.from(buffer);
+  }
+  
+  // Read from local file system
+  const absolutePath = path.resolve(process.cwd(), imagePath);
+  return await fs.promises.readFile(absolutePath);
 }
 
 export async function buildDocument(data) {
@@ -74,7 +84,7 @@ export async function buildDocument(data) {
 
   children.push(
     new Paragraph({
-      text: data.featureName,
+      text: data.feature?.featureName || "Untitled Document",
       heading: HeadingLevel.TITLE,
     })
   );
@@ -85,41 +95,36 @@ export async function buildDocument(data) {
   children.push(createParagraph(`End: ${data.requirementElicitation?.endTime}`));
 
   children.push(createHeading("Feature Description"));
-  children.push(createParagraph(`Start: ${data.featureDescription?.startTime}`));
-  children.push(createParagraph(data.featureDescription?.requirementAnalysis));
-  children.push(createParagraph(`End: ${data.featureDescription?.endTime}`));
+  children.push(createParagraph(`Start: ${data.feature?.featureDescription?.startTime}`));
+  children.push(createParagraph(data.feature?.featureDescription?.requirementAnalysis));
+  children.push(createParagraph(`End: ${data.feature?.featureDescription?.endTime}`));
 
   if (data.designDiagram?.imageLink) {
     children.push(createHeading("Design Diagram"));
 
-    const imgBuffer = await getImageBuffer(data.designDiagram.imageLink);
+    try {
+      const imgBuffer = await getImageBuffer(data.designDiagram.imageLink);
 
-    children.push(
-      new Paragraph({
-        children: [
-          new ImageRun({
-            data: imgBuffer,
-            transformation: { width: 500, height: 300 },
-          }),
-        ],
-      })
-    );
+      children.push(
+        new Paragraph({
+          children: [
+            new ImageRun({
+              data: imgBuffer,
+              transformation: { width: 500, height: 300 },
+            }),
+          ],
+        })
+      );
+    } catch (err) {
+      children.push(createParagraph(`[Image could not be loaded: ${data.designDiagram.imageLink}]`));
+    }
   }
-
-  children.push(createHeading("Feature Estimate"));
-  children.push(createParagraph(`Total Days: ${data.featureEstimate?.totalDays}`));
-  children.push(createParagraph(`Complexity: ${data.featureEstimate?.complexity}`));
-
-  children.push(createParagraph("Breakdown:"));
-  Object.entries(data.featureEstimate?.breakdown || {}).forEach(([k, v]) => {
-    children.push(createParagraph(`${k}: ${v}`));
-  });
 
   children.push(createHeading("User Story Distribution"));
 
-  if (data.userStoryDistribution?.length) {
-    const headers = getAllKeys(data.userStoryDistribution);
-    const table = createDynamicTable(headers, data.userStoryDistribution);
+  if (data.featureEstimate?.userStoryDistribution?.length) {
+    const headers = getAllKeys(data.featureEstimate.userStoryDistribution);
+    const table = createDynamicTable(headers, data.featureEstimate.userStoryDistribution);
     if (table) children.push(table);
   }
 

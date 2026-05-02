@@ -83,7 +83,7 @@ export const updateDraftSchema = z.object({
 
   retrospectiveSection: z.array(z.any()).optional(),
 });
-export const submitDocumentSchema = createDocumentSchema;
+export const submitDocumentSchema = updateDraftSchema;
 
 export const documentIdSchema = z.object({
   id: z.string().min(1),

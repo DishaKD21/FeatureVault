@@ -5,10 +5,11 @@ const validate = (schema, source = "body") => {
       req[source] = data; 
       next();
     } catch (error) {
+      console.error("Validation Error:", error);
       return res.status(400).json({
         success: false,
         message: "Validation error",
-        errors: error.errors,
+        errors: error.errors || error.message,
       });
     }
   };

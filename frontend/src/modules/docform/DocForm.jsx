@@ -21,10 +21,11 @@ import {
   createDraft,
   getDocumentById,
   updateDraft,
+  submitDocument,
 } from "@/lib/documentationApi";
 
 const DocForm = () => {
-  const { register, setValue, watch, handleSubmit, reset } = useForm();
+  const { register, setValue, watch, handleSubmit, reset, getValues } = useForm();
   const router = useRouter();
   const searchParams = useSearchParams();
   const startTime = watch("requirementElicitation.startTime");
@@ -49,37 +50,111 @@ const DocForm = () => {
       environmentDeployLinks: [],
     },
   ]);
+
+  // ─── localStorage helpers ───
+  const LOCAL_KEY = (id) => `docform_draft_${id}`;
+
+  const saveToLocal = (id) => {
+    try {
+      const currentData = getValues();
+      const snapshot = {
+        formValues: {
+          requirementElicitation: {
+            startTime: currentData.requirementElicitation?.startTime instanceof Date
+              ? currentData.requirementElicitation.startTime.toISOString()
+              : currentData.requirementElicitation?.startTime || "",
+            endTime: currentData.requirementElicitation?.endTime instanceof Date
+              ? currentData.requirementElicitation.endTime.toISOString()
+              : currentData.requirementElicitation?.endTime || "",
+            discussion: currentData.requirementElicitation?.discussion || "",
+          },
+          feature: {
+            featureName: currentData.feature?.featureName || "",
+            featureDescription: {
+              startTime: currentData.feature?.featureDescription?.startTime instanceof Date
+                ? currentData.feature.featureDescription.startTime.toISOString()
+                : currentData.feature?.featureDescription?.startTime || "",
+              endTime: currentData.feature?.featureDescription?.endTime instanceof Date
+                ? currentData.feature.featureDescription.endTime.toISOString()
+                : currentData.feature?.featureDescription?.endTime || "",
+              requirementAnalysis: currentData.feature?.featureDescription?.requirementAnalysis || "",
+            },
+          },
+          whoCreatedIt: {
+            name: currentData.whoCreatedIt?.name || "",
+            empId: currentData.whoCreatedIt?.empId || "",
+            totalTime: Number(currentData.whoCreatedIt?.totalTime || 0),
+          },
+        },
+        diagramId: diagramId || "",
+        userStories,
+        trackingList,
+        retrospective,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(LOCAL_KEY(id), JSON.stringify(snapshot));
+      console.log("[DocForm] Saved to localStorage for", id);
+    } catch (e) {
+      console.error("[DocForm] localStorage save failed:", e);
+    }
+  };
+
+  const restoreFromLocal = (id) => {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEY(id));
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
+
+  const clearLocal = (id) => {
+    try { localStorage.removeItem(LOCAL_KEY(id)); } catch {}
+  };
+
   // Helper to construct the standardized payload from current form state
+  // Strips null/undefined so Zod validation won't reject
   const getPayload = (data) => {
-    return {
+    const safeStr = (v) => (typeof v === "string" && v.length > 0 ? v : undefined);
+    const safeDate = (v) => {
+      if (v instanceof Date) return v.toISOString();
+      if (typeof v === "string" && v.length > 0) return v;
+      return undefined;
+    };
+
+    const payload = {
       requirementElicitation: {
-        startTime: data.requirementElicitation?.startTime?.toISOString(),
-        endTime: data.requirementElicitation?.endTime?.toISOString(),
-        discussion: data.requirementElicitation?.discussion,
+        startTime: safeDate(data.requirementElicitation?.startTime),
+        endTime: safeDate(data.requirementElicitation?.endTime),
+        discussion: safeStr(data.requirementElicitation?.discussion),
       },
       feature: {
-        featureName: data.feature?.featureName,
+        featureName: safeStr(data.feature?.featureName),
         featureDescription: {
-          startTime: data.feature?.featureDescription?.startTime?.toISOString(),
-          endTime: data.feature?.featureDescription?.endTime?.toISOString(),
-          requirementAnalysis:
-            data.feature?.featureDescription?.requirementAnalysis,
+          startTime: safeDate(data.feature?.featureDescription?.startTime),
+          endTime: safeDate(data.feature?.featureDescription?.endTime),
+          requirementAnalysis: safeStr(data.feature?.featureDescription?.requirementAnalysis),
         },
-      },
-      designDiagram: {
-        diagramId: diagramId || null,
       },
       featureEstimate: {
         userStoryDistribution: userStories,
       },
       trackingAndReleaseDetails: trackingList,
       whoCreatedIt: {
-        name: data.whoCreatedIt?.name,
-        empId: data.whoCreatedIt?.empId,
+        name: safeStr(data.whoCreatedIt?.name),
+        empId: safeStr(data.whoCreatedIt?.empId),
         totalTime: Number(data.whoCreatedIt?.totalTime || 0),
       },
       retrospectiveSection: retrospective,
     };
+
+    // Only include designDiagram if we have a real diagramId
+    if (diagramId) {
+      payload.designDiagram = { diagramId };
+    }
+
+    return payload;
   };
 
   const onSubmit = async (data) => {
@@ -89,8 +164,8 @@ const DocForm = () => {
     console.log("[DocForm] Submitting final update for docId:", docId, payload);
 
     try {
-      await updateDraft(docId, payload);
-      // Optional: Navigate to a success page or dashboard
+      await submitDocument(docId, payload);
+      clearLocal(docId);
       console.log("[DocForm] Final save successful");
       router.push("/dashboard");
     } catch (err) {
@@ -100,15 +175,8 @@ const DocForm = () => {
   };
 
   /**
-   * DRAFT FLOW + URL SYNC: Read documentId from URL on every searchParams change.
-   * If no `id` in URL, auto-create a draft and redirect.
-   * If `id` exists, set docId state.
-   *
-   * WHY searchParams dependency: After router.replace(), Next.js App Router does
-   * a soft navigation (no re-mount). Without this dependency, docId stays null.
-   */
-  /**
    * DRAFT FLOW + HYDRATION: Read documentId from URL and load existing data.
+   * Priority: 1) API data  2) localStorage fallback
    */
   useEffect(() => {
     const initForm = async () => {
@@ -118,62 +186,115 @@ const DocForm = () => {
       if (docIdParam) {
         setDocId(docIdParam);
 
-        // HYDRATION: Load existing document data
+        // Try API hydration first
+        let hydratedFromApi = false;
         console.log("[DocForm] Hydrating form for docId:", docIdParam);
         try {
           const response = await getDocumentById(docIdParam);
           const doc = response.data;
 
           if (doc) {
-            console.log("[DocForm] Document data loaded:", doc);
+            // Check if API doc has meaningful data (not just an empty draft)
+            const hasApiData = doc.requirementElicitation?.discussion ||
+              doc.feature?.featureName ||
+              doc.requirementElicitation?.startTime;
 
-            reset({
-              requirementElicitation: {
-                startTime: doc.requirementElicitation?.startTime
-                  ? new Date(doc.requirementElicitation.startTime)
-                  : null,
-                endTime: doc.requirementElicitation?.endTime
-                  ? new Date(doc.requirementElicitation.endTime)
-                  : null,
-                discussion: doc.requirementElicitation?.discussion || "",
-              },
+            if (hasApiData) {
+              console.log("[DocForm] Document data loaded from API:", doc);
 
-              feature: {
-                featureName: doc.feature?.featureName || "",
-                featureDescription: {
-                  startTime: doc.feature?.featureDescription?.startTime
-                    ? new Date(doc.feature.featureDescription.startTime)
+              reset({
+                requirementElicitation: {
+                  startTime: doc.requirementElicitation?.startTime
+                    ? new Date(doc.requirementElicitation.startTime)
                     : null,
-                  endTime: doc.feature?.featureDescription?.endTime
-                    ? new Date(doc.feature.featureDescription.endTime)
+                  endTime: doc.requirementElicitation?.endTime
+                    ? new Date(doc.requirementElicitation.endTime)
                     : null,
-                  requirementAnalysis:
-                    doc.feature?.featureDescription?.requirementAnalysis || "",
+                  discussion: doc.requirementElicitation?.discussion || "",
                 },
-              },
+                feature: {
+                  featureName: doc.feature?.featureName || "",
+                  featureDescription: {
+                    startTime: doc.feature?.featureDescription?.startTime
+                      ? new Date(doc.feature.featureDescription.startTime)
+                      : null,
+                    endTime: doc.feature?.featureDescription?.endTime
+                      ? new Date(doc.feature.featureDescription.endTime)
+                      : null,
+                    requirementAnalysis:
+                      doc.feature?.featureDescription?.requirementAnalysis || "",
+                  },
+                },
+                designDiagram: {
+                  diagramId: doc.designDiagram?.diagramId || "",
+                },
+                whoCreatedIt: {
+                  name: doc.whoCreatedIt?.name || "",
+                  empId: doc.whoCreatedIt?.empId || "",
+                  totalTime: doc.whoCreatedIt?.totalTime || 0,
+                },
+              });
 
-              designDiagram: {
-                diagramId: doc.designDiagram?.diagramId || "",
-              },
+              setUserStories(doc.featureEstimate?.userStoryDistribution || []);
+              setTrackingList(
+                doc.trackingAndReleaseDetails?.length
+                  ? doc.trackingAndReleaseDetails
+                  : [{ userStoryNumber: "", userStoryLink: "", prLinks: [], codeDescription: "", pipelineBuildLinks: [], environmentDeployLinks: [] }]
+              );
+              setRetrospective(doc.retrospectiveSection || []);
 
-              whoCreatedIt: {
-                name: doc.whoCreatedIt?.name || "",
-                empId: doc.whoCreatedIt?.empId || "",
-                totalTime: doc.whoCreatedIt?.totalTime || 0,
-              },
-            });
+              if (doc.designDiagram?.diagramId) {
+                setDiagramId(doc.designDiagram.diagramId);
+              }
 
-            // These stay as state (correct already)
-            setUserStories(doc.featureEstimate?.userStoryDistribution || []);
-            setTrackingList(doc.trackingAndReleaseDetails || []);
-            setRetrospective(doc.retrospectiveSection || []);
-
-            if (doc.designDiagram?.diagramId) {
-              setDiagramId(doc.designDiagram.diagramId);
+              hydratedFromApi = true;
             }
           }
         } catch (err) {
-          console.error("[DocForm] Hydration failed:", err);
+          console.error("[DocForm] API hydration failed:", err);
+        }
+
+        // Fallback: restore from localStorage if API had no data
+        if (!hydratedFromApi) {
+          const local = restoreFromLocal(docIdParam);
+          if (local) {
+            console.log("[DocForm] Restoring from localStorage:", local);
+            const fv = local.formValues;
+            reset({
+              requirementElicitation: {
+                startTime: fv.requirementElicitation?.startTime
+                  ? new Date(fv.requirementElicitation.startTime)
+                  : null,
+                endTime: fv.requirementElicitation?.endTime
+                  ? new Date(fv.requirementElicitation.endTime)
+                  : null,
+                discussion: fv.requirementElicitation?.discussion || "",
+              },
+              feature: {
+                featureName: fv.feature?.featureName || "",
+                featureDescription: {
+                  startTime: fv.feature?.featureDescription?.startTime
+                    ? new Date(fv.feature.featureDescription.startTime)
+                    : null,
+                  endTime: fv.feature?.featureDescription?.endTime
+                    ? new Date(fv.feature.featureDescription.endTime)
+                    : null,
+                  requirementAnalysis:
+                    fv.feature?.featureDescription?.requirementAnalysis || "",
+                },
+              },
+              whoCreatedIt: {
+                name: fv.whoCreatedIt?.name || "",
+                empId: fv.whoCreatedIt?.empId || "",
+                totalTime: fv.whoCreatedIt?.totalTime || 0,
+              },
+            });
+
+            if (local.diagramId) setDiagramId(local.diagramId);
+            if (local.userStories?.length) setUserStories(local.userStories);
+            if (local.trackingList?.length) setTrackingList(local.trackingList);
+            if (local.retrospective?.length) setRetrospective(local.retrospective);
+          }
         }
 
         setMounted(true);
@@ -265,8 +386,20 @@ const DocForm = () => {
     });
   };
 
-  const handleDiagramNavigation = () => {
+  const handleDiagramNavigation = async () => {
     if (docId) {
+      // Always save to localStorage first (instant, reliable)
+      saveToLocal(docId);
+
+      // Then try API save too
+      try {
+        const currentData = getValues();
+        const payload = getPayload(currentData);
+        await updateDraft(docId, payload);
+        console.log("[DocForm] Auto-saved draft to API before navigating to diagram tool");
+      } catch (err) {
+        console.warn("[DocForm] API auto-save failed, but localStorage is safe:", err.message);
+      }
       const navUrl = `/diagram-editor?docId=${docId}`;
       router.push(navUrl);
     } else {
