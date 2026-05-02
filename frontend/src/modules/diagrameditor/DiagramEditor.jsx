@@ -31,14 +31,23 @@ function EditableNode({ id, data, selected }) {
   const [text, setText] = useState(data.label || '');
   const inputRef = useRef(null);
 
+  const theme = data.theme || 'dark';
+  const isLight = theme === 'light';
+
   const nodeType = data.nodeType || 'default';
   const fontSize = data.fontSize || 14;
   const fontWeight = data.fontWeight || 'normal';
   const fontStyle = data.fontStyle || 'normal';
   const textDecoration = data.textDecoration || 'none';
   const textAlign = data.textAlign || 'center';
-  const color = data.color || '#c4f042';
-  const bgColor = data.bgColor || '#1B1B29';
+  
+  // Default colors adapt to theme
+  const defaultBg = isLight ? '#ffffff' : '#1B1B29';
+  const defaultColor = isLight ? '#1f2937' : '#c4f042';
+  const defaultBorder = isLight ? '#e5e7eb' : '#2A2D3E';
+  
+  const color = data.color || defaultColor;
+  const bgColor = data.bgColor || defaultBg;
 
   const handleDoubleClick = (e) => {
     e.stopPropagation();
@@ -73,8 +82,8 @@ function EditableNode({ id, data, selected }) {
         minWidth: 120,
         minHeight: 40,
         borderRadius: 8,
-        border: selected ? '2px solid #c4f042' : '1px solid #2A2D3E',
-        boxShadow: selected ? '0 0 0 3px rgba(196, 240, 66, 0.15)' : 'shadow-lg',
+        border: selected ? (isLight ? '2px solid #3b82f6' : '2px solid #c4f042') : `1px solid ${defaultBorder}`,
+        boxShadow: selected ? (isLight ? '0 0 0 3px rgba(59, 130, 246, 0.15)' : '0 0 0 3px rgba(196, 240, 66, 0.15)') : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
@@ -130,7 +139,7 @@ function EditableNode({ id, data, selected }) {
           />
         ) : (
           <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {text || <span style={{ color: '#4A4D60' }}>Double-click to type...</span>}
+            {text || <span style={{ color: isLight ? '#9ca3af' : '#4A4D60' }}>Double-click to type...</span>}
           </span>
         )}
       </div>
@@ -461,10 +470,10 @@ function Playground() {
     [setNodes]
   );
 
-  /* ─── Inject callbacks into node data ─── */
+  /* ─── Inject callbacks and theme into node data ─── */
   const nodesWithCallbacks = useMemo(
-    () => nodes.map((n) => ({ ...n, data: { ...n.data, onLabelChange } })),
-    [nodes, onLabelChange]
+    () => nodes.map((n) => ({ ...n, data: { ...n.data, onLabelChange, theme } })),
+    [nodes, onLabelChange, theme]
   );
 
   /* ─── Build edge style options ─── */

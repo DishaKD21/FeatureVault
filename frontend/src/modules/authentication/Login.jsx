@@ -34,111 +34,167 @@ const Login = () => {
     }
     return newErrors;
   };
- const handleGoogleLogin = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    toast.success("Google login successful!");
-    console.log("Google User:", result.user);
-    router.push("/");
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
-  const handleResetPassword = async () => {
-  if (!formData.email) {
-    toast.warning("Enter email first");
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, formData.email);
-    toast.success("Password reset email sent! Check spam folder too.");
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
-
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm();
-
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    toast.error("Please fix form errors");
-  } else {
+  const handleGoogleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      toast.success("Login successful!");
-      console.log("Logged in:", userCredential.user);
+      const result = await signInWithPopup(auth, provider);
+      toast.success("Google login successful!");
+      console.log("Google User:", result.user);
       router.push("/");
     } catch (error) {
       toast.error(error.message);
     }
-  }
-};
+  };
+  const handleResetPassword = async () => {
+    if (!formData.email) {
+      toast.warning("Enter email first");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      toast.success("Password reset email sent! Check spam folder too.");
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix form errors");
+    } else {
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+
+        toast.success("Login successful!");
+        console.log("Logged in:", userCredential.user);
+        router.push("/");
+      } catch (error) {
+        toast.error(error.message);
+      }
+    }
+  };
 
   return (
-    <div className="flex justify-center items-center text-center w-screen h-screen border-2 border-amber-950">
-      <div className=" border-blue-300 p-3 border-2">
-        <h1 className="text-2xl pb-3">Sign In</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col item-center">
-          <label htmlFor="email" className="flex flex-left justify-between">
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            onChange={handleChange}
-            className="border-2 border-black-950"
-          />
-          <p className="text-red-700">{errors.email}</p>
-          <div className="flex flex-row justify-between gap-3">
-            <label>Password</label>
-            <Link href="">
-              <span
-                onClick={handleResetPassword}
-                className="text-blue-400 underline cursor-pointer">
-                Forgot Password?
-              </span>
-            </Link>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Welcome back
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Sign in to access your account
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Email address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <div className="text-sm">
+                  <span
+                    onClick={handleResetPassword}
+                    className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer transition-colors"
+                  >
+                    Forgot your password?
+                  </span>
+                </div>
+              </div>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+              )}
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors"
+              >
+                Sign in
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <Image src={Google} alt="Google" height={20} width={20} />
+                Sign in with Google
+              </button>
+            </div>
           </div>
-          <input
-            type="password"
-            name="password"
-            onChange={handleChange}
-            className="border-2 border-black-950"
-          />
-          <p className="text-red-700">{errors.password}</p>
-          <button
-            type="submit"
-            className="bg-black text-white mt-4 p-2 w-full cursor-pointer"
+        </div>
+
+        <p className="mt-8 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
           >
-            Sign In
-          </button>
-          <div className="text-gray-400 align-middle flex flex-row m-4">
-            <hr className="border border-b-gray-400 w-50 m-3"></hr>
-            <span>or continue with</span>
-            <hr className="border border-b-gray-400 w-50 m-3"></hr>
-          </div>
-          <div
-            onClick={handleGoogleLogin}
-            className="bg-black text-white mt-4 p-2 w-full cursor-pointer flex flex-row justify-center gap-3"
-          >
-            <Image src={Google} height="20" width="20"></Image>
-            Google
-          </div>
-          <div className="flex flex-row justify-center">
-            <p>Don't have an Account?</p>
-            <Link href="/register">
-              <span className="text-blue-400 underline">Sign up</span>
-            </Link>
-          </div>
-        </form>
+            Sign up now
+          </Link>
+        </p>
       </div>
     </div>
   );

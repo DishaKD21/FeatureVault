@@ -23,8 +23,10 @@ const Navbar = () => {
   return (
     <nav className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
       {/* Left - Logo */}
-      <div className="flex items-center gap-2 font-semibold text-lg">
-        <Image src={logo} height={50} width={50} alt="FeatureVault logo"/>
+      <div className="flex items-center gap-2 font-semibold text-lg cursor-pointer">
+        <Link href="/">
+          <Image src={logo} height={40} width={160} alt="FeatureVault logo" className="h-10 w-auto object-contain" priority />
+        </Link>
       </div>
 
       {/* Center - Links */}
@@ -32,16 +34,21 @@ const Navbar = () => {
         <Link href="/" className="hover:text-black">
           Home
         </Link>
-        <Link href="#features" className="hover:text-black">
+        <Link href="/#features" className="hover:text-black">
           Features
         </Link>
         <Link href="/diagram-editor" className="hover:text-black">
           Diagram Tool
         </Link>
         {user && (
-          <Link href="/create-doc" className="bg-black text-white px-4 py-1 rounded-md hover:bg-gray-800">
-            Create Doc
-          </Link>
+          <>
+            <Link href="/dashboard" className="hover:text-black font-medium text-blue-600">
+              Dashboard
+            </Link>
+            <Link href="/create-doc" className="bg-black text-white px-4 py-1 rounded-md hover:bg-gray-800">
+              Create Doc
+            </Link>
+          </>
         )}
       </div>
 
@@ -60,15 +67,19 @@ const Navbar = () => {
             </Link>
           </>
         ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">{user.displayName || user.email?.split("@")[0]}</span>
-            <div 
-              className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center cursor-pointer text-lg overflow-hidden"
-              title="Logout"
-              onClick={handleLogout}
-            >
-              {user.photoURL ? <img src={user.photoURL} alt="profile" className="w-full h-full object-cover" /> : "👤"}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">{user.displayName || user.email?.split("@")[0]}</span>
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-lg overflow-hidden border">
+                {user.photoURL ? <img src={user.photoURL} alt="profile" className="w-full h-full object-cover" /> : "👤"}
+              </div>
             </div>
+            <button 
+              onClick={handleLogout}
+              className="text-sm border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1 rounded-md transition-colors"
+            >
+              Sign Out
+            </button>
           </div>
         )}
       </div>
