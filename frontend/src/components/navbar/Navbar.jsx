@@ -1,8 +1,25 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "../../../public/logo-dark.png";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../../modules/authentication/firebase";
+
 const Navbar = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
+
   return (
     <nav className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
       {/* Left - Logo */}
@@ -11,7 +28,7 @@ const Navbar = () => {
       </div>
 
       {/* Center - Links */}
-      <div className="flex gap-6 text-gray-700">
+      <div className="flex gap-6 text-gray-700 items-center">
         <Link href="/" className="hover:text-black">
           Home
         </Link>
@@ -21,20 +38,39 @@ const Navbar = () => {
         <Link href="/diagram-editor" className="hover:text-black">
           Diagram Tool
         </Link>
+        {user && (
+          <Link href="/create-doc" className="bg-black text-white px-4 py-1 rounded-md hover:bg-gray-800">
+            Create Doc
+          </Link>
+        )}
       </div>
 
       {/* Right - Signup + Profile */}
       <div className="flex items-center gap-4">
-        <Link
-          href="/register"
-          className="border px-4 py-1 rounded-md hover:bg-gray-100"
-        >
-          Signup
-        </Link>
-
-        {/* <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-          👤
-        </div> */}
+        {!user ? (
+          <>
+            <Link href="/login" className="px-4 py-1 rounded-md hover:bg-gray-100">
+              Login
+            </Link>
+            <Link
+              href="/register"
+              className="border px-4 py-1 rounded-md hover:bg-gray-100"
+            >
+              Signup
+            </Link>
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium">{user.displayName || user.email?.split("@")[0]}</span>
+            <div 
+              className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center cursor-pointer text-lg overflow-hidden"
+              title="Logout"
+              onClick={handleLogout}
+            >
+              {user.photoURL ? <img src={user.photoURL} alt="profile" className="w-full h-full object-cover" /> : "👤"}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

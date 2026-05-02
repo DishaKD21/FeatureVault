@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Google from "../../../public/google.svg";
@@ -9,6 +10,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { toast } from "react-toastify";
 
 const Login = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -37,6 +39,7 @@ const Login = () => {
     const result = await signInWithPopup(auth, provider);
     toast.success("Google login successful!");
     console.log("Google User:", result.user);
+    router.push("/");
   } catch (error) {
     toast.error(error.message);
   }
@@ -72,6 +75,7 @@ const Login = () => {
 
       toast.success("Login successful!");
       console.log("Logged in:", userCredential.user);
+      router.push("/");
     } catch (error) {
       toast.error(error.message);
     }

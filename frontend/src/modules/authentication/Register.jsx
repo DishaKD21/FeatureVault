@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Google from "../../../public/google.svg";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
@@ -8,6 +9,7 @@ import { auth, provider } from "../authentication/firebase";
 import { toast } from "react-toastify";
 
 const Register = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,6 +58,7 @@ const handleSubmit = async (e) => {
 
       toast.success("Registration successful!");
       console.log("Registered:", userCredential.user);
+      router.push("/");
 
     } catch (error) {
       toast.error(error.message);
@@ -68,6 +71,7 @@ const handleGoogleSignup = async () => {
     const result = await signInWithPopup(auth, provider);
     toast.success("Google signup successful!");
     console.log("Google User:", result.user);
+    router.push("/");
   } catch (error) {
     toast.error(error.message);
   }
