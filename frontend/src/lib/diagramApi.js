@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:5000/api";
+import API_URL from "../config";
+const API_BASE = `${API_URL}/api`;
 
 /**
  * Convert base64 data URL to Blob for FormData upload

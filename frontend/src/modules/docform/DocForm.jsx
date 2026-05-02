@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import MultiInput from "./MultiInput";
 import EditableTable from "./UserStoryTable";
+import API_URL from "../../config";
 import { getDiagramByDocumentId } from "@/lib/diagramApi";
 import {
   createDraft,
@@ -475,7 +476,7 @@ const DocForm = () => {
           {savedDiagram?.image && !isLoadingDiagram && (
             <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2">
               <img
-                src={`http://localhost:5000/${savedDiagram.image}`}
+                src={`${API_URL}/${savedDiagram.image}`}
                 alt="diagram preview"
                 className="w-full h-auto object-contain max-h-80 rounded-md"
                 onError={(e) => {

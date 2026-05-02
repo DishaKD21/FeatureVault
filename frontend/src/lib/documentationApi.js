@@ -1,5 +1,6 @@
 
-const API_BASE = "http://localhost:5000/api";
+import API_URL from "../config";
+const API_BASE = `${API_URL}/api`;
 
 /**
  * Create a draft document (empty shell with status: "draft")
