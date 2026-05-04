@@ -8,6 +8,7 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../authentication/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { toast } from "react-toastify";
+import { getPostAuthRedirect, syncFirebaseUser } from "@/components/auth/useAuth";
 
 const Login = () => {
   const router = useRouter();
@@ -34,12 +35,18 @@ const Login = () => {
     }
     return newErrors;
   };
+
+  const completeLogin = async (user) => {
+    await syncFirebaseUser(user);
+    router.push(getPostAuthRedirect());
+  };
+
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       toast.success("Google login successful!");
       console.log("Google User:", result.user);
-      router.push("/");
+      await completeLogin(result.user);
     } catch (error) {
       toast.error(error.message);
     }
@@ -75,7 +82,7 @@ const Login = () => {
 
         toast.success("Login successful!");
         console.log("Logged in:", userCredential.user);
-        router.push("/");
+        await completeLogin(userCredential.user);
       } catch (error) {
         toast.error(error.message);
       }

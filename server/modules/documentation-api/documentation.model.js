@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const documentSchema = new mongoose.Schema(
   {
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
      status: {
       type: String,
       enum: ["draft", "completed"],

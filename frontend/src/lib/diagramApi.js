@@ -1,4 +1,5 @@
 import API_URL from "../config";
+import { getAuthHeaders } from "@/components/auth/useAuth";
 const API_BASE = `${API_URL}/api`;
 
 /**
@@ -41,6 +42,7 @@ export const createDiagram = async (payload) => {
 
   const res = await fetch(`${API_BASE}/diagram/create`, {
     method: "POST",
+    headers: getAuthHeaders(),
     body: formData,
     // DO NOT set Content-Type header — browser sets it with boundary automatically
   });
@@ -76,6 +78,7 @@ export const updateDiagram = async (payload) => {
 
   const res = await fetch(`${API_BASE}/diagram/update/${payload.id}`, {
     method: "PUT",
+    headers: getAuthHeaders(),
     body: formData,
   });
 
@@ -91,7 +94,9 @@ export const updateDiagram = async (payload) => {
  * Fetch diagram by document ID
  */
 export const getDiagramByDocumentId = async (documentId) => {
-  const res = await fetch(`${API_BASE}/diagram/by-document/${documentId}`);
+  const res = await fetch(`${API_BASE}/diagram/by-document/${documentId}`, {
+    headers: getAuthHeaders(),
+  });
 
   if (!res.ok) {
     if (res.status === 404) return null;
@@ -105,13 +110,56 @@ export const getDiagramByDocumentId = async (documentId) => {
  * Fetch diagram by diagram ID
  */
 export const getDiagramById = async (diagramId) => {
-  const res = await fetch(`${API_BASE}/diagram/${diagramId}`);
+  const res = await fetch(`${API_BASE}/diagram/${diagramId}`, {
+    headers: getAuthHeaders(),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch diagram: ${res.statusText}`);
   }
 
   return res.json();
+};
+
+/**
+ * Fetch all diagrams
+ */
+export const getAllDiagrams = async () => {
+  const res = await fetch(`${API_BASE}/diagram`, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch diagrams: ${res.statusText}`);
+  }
+
+  return res.json();
+};
+
+/**
+ * Download a stored diagram image as PNG
+ */
+export const downloadDiagramPng = async (imagePath, filename = "diagram") => {
+  if (!imagePath) throw new Error("No diagram image available");
+
+  const imageUrl = imagePath.startsWith("http")
+    ? imagePath
+    : `${API_URL}/${imagePath.replace(/\\/g, "/")}`;
+
+  const res = await fetch(imageUrl, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to download diagram image");
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 };
  
 /**
@@ -120,6 +168,7 @@ export const getDiagramById = async (diagramId) => {
 export const deleteDiagram = async (diagramId) => {
   const res = await fetch(`${API_BASE}/diagram/delete/${diagramId}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
 
   if (!res.ok) {

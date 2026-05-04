@@ -1,35 +1,49 @@
-import React from "react";
-import Link from "next/link";
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { isAuthenticated, saveRedirectPath } from "@/components/auth/useAuth";
 
 const Hero = () => {
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
+
+  const handleCreateDocumentation = () => {
+    setRedirecting(true);
+
+    if (!isAuthenticated()) {
+      saveRedirectPath("/create-doc");
+      router.push("/login");
+      return;
+    }
+
+    router.push("/create-doc");
+  };
+
   return (
-    <section className="flex flex-col items-center text-center px-6 py-16 bg-gray-50">
-      
-      {/* Heading */}
-      <h1 className="text-3xl md:text-4xl font-semibold mb-4">
+    <section className="flex flex-col items-center bg-gray-50 px-6 py-16 text-center">
+      <h1 className="mb-4 text-3xl font-semibold md:text-4xl">
         Create Smooth and fast feature documentation
       </h1>
 
-      {/* Subtext */}
-      <p className="text-gray-600 max-w-2xl mb-6">
+      <p className="mb-6 max-w-2xl text-gray-600">
         Quickly build structured feature documentation, create system diagrams
         with our built-in design editor, and organize technical details in one
         place. Export ready-to-use documentation instantly.
       </p>
 
-      {/* Button */}
-      <Link
-        href="/create-doc"
-        className="border px-6 py-2 rounded-lg hover:bg-gray-100 mb-10 inline-block"
+      <button
+        type="button"
+        disabled={redirecting}
+        onClick={handleCreateDocumentation}
+        className="mb-10 inline-block rounded-lg border px-6 py-2 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-60"
       >
-        Create Documentation
-      </Link>
+        {redirecting ? "Redirecting..." : "Create Documentation"}
+      </button>
 
-      {/* Placeholder Box */}
-      <div className="w-full max-w-3xl h-64 border-2 border-dashed border-green-400 rounded-2xl bg-green-50 flex items-center justify-center">
+      <div className="flex h-64 w-full max-w-3xl items-center justify-center rounded-2xl border-2 border-dashed border-green-400 bg-green-50">
         <span className="text-green-500">Diagram / Preview Area</span>
       </div>
-
     </section>
   );
 };

@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import DiagramEditor from '@/modules/diagrameditor/DiagramEditor';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function LoadingFallback() {
   return (
@@ -16,10 +17,12 @@ function LoadingFallback() {
 
 export default function DiagramEditorPage() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <div>
-        <DiagramEditor />
-      </div>
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<LoadingFallback />}>
+        <div>
+          <DiagramEditor />
+        </div>
+      </Suspense>
+    </ProtectedRoute>
   );
 }

@@ -1,86 +1,106 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import logo from "../../../public/logo-dark.png";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../modules/authentication/firebase";
+import { isAuthenticated, saveRedirectPath, syncFirebaseUser, useAuth } from "@/components/auth/useAuth";
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
+  const router = useRouter();
+  const { authenticated, checkingAuth, logout } = useAuth();
+  const [userLabel, setUserLabel] = useState("");
+  const [redirectingTo, setRedirectingTo] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        setUserLabel("");
+        return;
+      }
+
+      setUserLabel(currentUser.displayName || currentUser.email?.split("@")[0] || "");
+
+      const hasToken = typeof window !== "undefined" && localStorage.getItem("token");
+      if (!hasToken) {
+        await syncFirebaseUser(currentUser);
+      }
     });
+
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const goProtected = (path) => {
+    setRedirectingTo(path);
+
+    if (!isAuthenticated()) {
+      saveRedirectPath(path);
+      router.push("/login");
+      return;
+    }
+
+    router.push(path);
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
-      {/* Left - Logo */}
-      <div className="flex items-center gap-2 font-semibold text-lg cursor-pointer">
+    <nav className="flex items-center justify-between border-b bg-white px-6 py-3 shadow-sm">
+      <div className="flex cursor-pointer items-center gap-2 text-lg font-semibold">
         <Link href="/">
           <Image src={logo} height={40} width={160} alt="FeatureVault logo" className="h-10 w-auto object-contain" priority />
         </Link>
       </div>
 
-      {/* Center - Links */}
-      <div className="flex gap-6 text-gray-700 items-center">
+      <div className="flex items-center gap-6 text-gray-700">
         <Link href="/" className="hover:text-black">
           Home
         </Link>
         <Link href="/#features" className="hover:text-black">
           Features
         </Link>
-        <Link href="/diagram-editor" className="hover:text-black">
+        <button
+          type="button"
+          disabled={redirectingTo === "/diagram-editor"}
+          onClick={() => goProtected("/diagram-editor")}
+          className="hover:text-black disabled:cursor-wait disabled:text-gray-400"
+        >
           Diagram Tool
-        </Link>
-        {user && (
-          <>
-            <Link href="/dashboard" className="hover:text-black font-medium text-blue-600">
-              Dashboard
-            </Link>
-            <Link href="/create-doc" className="bg-black text-white px-4 py-1 rounded-md hover:bg-gray-800">
-              Create Doc
-            </Link>
-          </>
-        )}
+        </button>
       </div>
 
-      {/* Right - Signup + Profile */}
       <div className="flex items-center gap-4">
-        {!user ? (
+        {checkingAuth ? (
+          <span className="text-sm text-gray-500">Checking...</span>
+        ) : !authenticated ? (
           <>
-            <Link href="/login" className="px-4 py-1 rounded-md hover:bg-gray-100">
+            <Link href="/login" className="rounded-md px-4 py-1 hover:bg-gray-100">
               Login
             </Link>
-            <Link
-              href="/register"
-              className="border px-4 py-1 rounded-md hover:bg-gray-100"
-            >
+            <Link href="/register" className="rounded-md border px-4 py-1 hover:bg-gray-100">
               Signup
             </Link>
           </>
         ) : (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{user.displayName || user.email?.split("@")[0]}</span>
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-lg overflow-hidden border">
-                {user.photoURL ? <img src={user.photoURL} alt="profile" className="w-full h-full object-cover" /> : "👤"}
-              </div>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="text-sm border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1 rounded-md transition-colors"
+          <>
+            {userLabel && <span className="text-sm text-gray-500">{userLabel}</span>}
+            <button
+              type="button"
+              disabled={redirectingTo === "/dashboard"}
+              onClick={() => goProtected("/dashboard")}
+              className="font-medium text-blue-600 hover:text-black disabled:cursor-wait disabled:text-gray-400"
             >
-              Sign Out
+              Dashboard
             </button>
-          </div>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-md border border-red-200 px-3 py-1 text-sm text-red-500 transition-colors hover:bg-red-50"
+            >
+              Logout
+            </button>
+          </>
         )}
       </div>
     </nav>

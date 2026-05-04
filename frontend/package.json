@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mantine/core": "^9.1.1",
+    "@mantine/hooks": "^9.1.1",
     "@tiptap/extension-table": "^3.22.0",
     "@tiptap/extension-table-cell": "^3.22.0",
     "@tiptap/extension-table-header": "^3.22.0",

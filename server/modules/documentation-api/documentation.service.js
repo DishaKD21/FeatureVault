@@ -1,26 +1,27 @@
 import Document from "./documentation.model.js";
 
-export const createDraft = async () => {
+export const createDraft = async (createdBy) => {
   const draft = await Document.create({
-    status: "draft"
+    status: "draft",
+    createdBy,
 
   });
   return draft;
 };
 
-export const updateDraft = async (id, data) => {
-  return await Document.findByIdAndUpdate(
-    id,
+export const updateDraft = async (id, createdBy, data) => {
+  return await Document.findOneAndUpdate(
+    { _id: id, createdBy },
     { ...data, status: "draft" },
     { returnDocument: "after", runValidators: false }
   );
 };
 
-export const submitDocument = async (id, data) => {
+export const submitDocument = async (id, createdBy, data) => {
   const submission = { ...data, status: "completed" };
 
-  return await Document.findByIdAndUpdate(
-    id,
+  return await Document.findOneAndUpdate(
+    { _id: id, createdBy },
     submission,
     {
       returnDocument: "after",
@@ -29,14 +30,14 @@ export const submitDocument = async (id, data) => {
   );
 };
 
-export const getAllDocuments = async () => {
-  return await Document.find().sort({ createdAt: -1 });
+export const getAllDocuments = async (createdBy) => {
+  return await Document.find({ createdBy }).sort({ createdAt: -1 });
 };
 
-export const getDocumentById = async (id) => {
-  return await Document.findById(id);
+export const getDocumentById = async (id, createdBy) => {
+  return await Document.findOne({ _id: id, createdBy });
 };
 
-export const deleteDocument = async (id) => {
-  return await Document.findByIdAndDelete(id);
+export const deleteDocument = async (id, createdBy) => {
+  return await Document.findOneAndDelete({ _id: id, createdBy });
 };

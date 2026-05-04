@@ -1,121 +1,103 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import MultiInput from "./MultiInput";
-import EditableTable from "./UserStoryTable";
-import API_URL from "../../config";
+import StepSidebar from "@/components/form/StepSidebar";
+import StepRenderer from "@/components/form/StepRenderer";
 import { getDiagramByDocumentId } from "@/lib/diagramApi";
 import {
   createDraft,
+  deleteDocument,
+  exportDocument,
   getDocumentById,
-  updateDraft,
   submitDocument,
+  updateDraft,
 } from "@/lib/documentationApi";
 
+const STEPS = [
+  { id: "requirement", title: "Requirement Elucidation" },
+  { id: "feature", title: "Feature Details" },
+  { id: "diagram", title: "Design Diagram" },
+  { id: "estimate", title: "Feature Estimate" },
+  { id: "tracking", title: "Tracking & Release" },
+  { id: "retrospective", title: "Retrospective" },
+  { id: "creator", title: "Who Created It" },
+  { id: "review", title: "Review & Submit" },
+];
+
+const STEP_FIELDS = {
+  0: ["requirementElicitation.discussion"],
+  1: ["feature.featureName", "feature.featureDescription.requirementAnalysis"],
+  6: ["whoCreatedIt.name", "whoCreatedIt.empId", "whoCreatedIt.totalTime"],
+};
+
+const emptyTrackingItem = {
+  userStoryNumber: "",
+  userStoryLink: "",
+  prLinks: [],
+  codeDescription: "",
+  pipelineBuildLinks: [],
+  environmentDeployLinks: [],
+};
+
+const LOCAL_KEY = (id) => `docform_draft_${id}`;
+const PROGRESS_KEY = (id) => `docform_progress_${id}`;
+
+const normalizeDate = (value) => {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+};
+
+const normalizeCompleted = (value) =>
+  Array.isArray(value)
+    ? value
+        .map(Number)
+        .filter((step) => Number.isInteger(step) && step >= 0 && step < STEPS.length)
+    : [];
+
 const DocForm = () => {
-  const { register, setValue, watch, handleSubmit, reset, getValues } = useForm();
+  const { register, setValue, watch, handleSubmit, reset, getValues, trigger } = useForm({
+    mode: "onTouched",
+    defaultValues: {
+      requirementElicitation: { startTime: null, endTime: null, discussion: "" },
+      feature: {
+        featureName: "",
+        featureDescription: { startTime: null, endTime: null, requirementAnalysis: "" },
+      },
+      designDiagram: { diagramId: "" },
+      whoCreatedIt: { name: "", empId: "", totalTime: 0 },
+    },
+  });
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  const startTime = watch("requirementElicitation.startTime");
-  const endTime = watch("requirementElicitation.endTime");
-  const featureStart = watch("feature.featureDescription.startTime");
-  const featureEnd = watch("feature.featureDescription.endTime");
-  const [mounted, setMounted] = useState(false);
+  const watchedValues = watch();
+  const didHydrateRef = useRef(false);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
   const [savedDiagram, setSavedDiagram] = useState(null);
   const [diagramId, setDiagramId] = useState(null);
   const [docId, setDocId] = useState(null);
+  const [doc, setDoc] = useState(null);
   const [isLoadingDiagram, setIsLoadingDiagram] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState("");
+  const [formError, setFormError] = useState("");
   const [userStories, setUserStories] = useState([]);
   const [retrospective, setRetrospective] = useState([]);
-  const [trackingList, setTrackingList] = useState([
-    {
-      userStoryNumber: "",
-      userStoryLink: "",
-      prLinks: [],
-      codeDescription: "",
-      pipelineBuildLinks: [],
-      environmentDeployLinks: [],
-    },
-  ]);
+  const [trackingList, setTrackingList] = useState([{ ...emptyTrackingItem }]);
 
-  // ─── localStorage helpers ───
-  const LOCAL_KEY = (id) => `docform_draft_${id}`;
+  const isLocked = doc?.status === "completed";
+  const isReviewStep = currentStep === STEPS.length - 1;
 
-  const saveToLocal = (id) => {
-    try {
-      const currentData = getValues();
-      const snapshot = {
-        formValues: {
-          requirementElicitation: {
-            startTime: currentData.requirementElicitation?.startTime instanceof Date
-              ? currentData.requirementElicitation.startTime.toISOString()
-              : currentData.requirementElicitation?.startTime || "",
-            endTime: currentData.requirementElicitation?.endTime instanceof Date
-              ? currentData.requirementElicitation.endTime.toISOString()
-              : currentData.requirementElicitation?.endTime || "",
-            discussion: currentData.requirementElicitation?.discussion || "",
-          },
-          feature: {
-            featureName: currentData.feature?.featureName || "",
-            featureDescription: {
-              startTime: currentData.feature?.featureDescription?.startTime instanceof Date
-                ? currentData.feature.featureDescription.startTime.toISOString()
-                : currentData.feature?.featureDescription?.startTime || "",
-              endTime: currentData.feature?.featureDescription?.endTime instanceof Date
-                ? currentData.feature.featureDescription.endTime.toISOString()
-                : currentData.feature?.featureDescription?.endTime || "",
-              requirementAnalysis: currentData.feature?.featureDescription?.requirementAnalysis || "",
-            },
-          },
-          whoCreatedIt: {
-            name: currentData.whoCreatedIt?.name || "",
-            empId: currentData.whoCreatedIt?.empId || "",
-            totalTime: Number(currentData.whoCreatedIt?.totalTime || 0),
-          },
-        },
-        diagramId: diagramId || "",
-        userStories,
-        trackingList,
-        retrospective,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(LOCAL_KEY(id), JSON.stringify(snapshot));
-      console.log("[DocForm] Saved to localStorage for", id);
-    } catch (e) {
-      console.error("[DocForm] localStorage save failed:", e);
-    }
-  };
-
-  const restoreFromLocal = (id) => {
-    try {
-      const raw = localStorage.getItem(LOCAL_KEY(id));
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  };
-
-  const clearLocal = (id) => {
-    try { localStorage.removeItem(LOCAL_KEY(id)); } catch {}
-  };
-
-  // Helper to construct the standardized payload from current form state
-  // Strips null/undefined so Zod validation won't reject
-  const getPayload = (data) => {
+  const getPayload = (data = getValues()) => {
     const safeStr = (v) => (typeof v === "string" && v.length > 0 ? v : undefined);
     const safeDate = (v) => {
       if (v instanceof Date) return v.toISOString();
@@ -149,7 +131,6 @@ const DocForm = () => {
       retrospectiveSection: retrospective,
     };
 
-    // Only include designDiagram if we have a real diagramId
     if (diagramId) {
       payload.designDiagram = { diagramId };
     }
@@ -157,225 +138,172 @@ const DocForm = () => {
     return payload;
   };
 
-  const onSubmit = async (data) => {
-    if (!docId) return;
-
-    const payload = getPayload(data);
-    console.log("[DocForm] Submitting final update for docId:", docId, payload);
-
+  const saveToLocal = (id) => {
     try {
-      await submitDocument(docId, payload);
-      clearLocal(docId);
-      console.log("[DocForm] Final save successful");
-      router.push("/dashboard");
-    } catch (err) {
-      console.error("[DocForm] Submit failed:", err);
-      alert("Failed to submit: " + err.message);
+      const data = getValues();
+      const snapshot = {
+        formValues: {
+          requirementElicitation: {
+            startTime: data.requirementElicitation?.startTime instanceof Date
+              ? data.requirementElicitation.startTime.toISOString()
+              : data.requirementElicitation?.startTime || "",
+            endTime: data.requirementElicitation?.endTime instanceof Date
+              ? data.requirementElicitation.endTime.toISOString()
+              : data.requirementElicitation?.endTime || "",
+            discussion: data.requirementElicitation?.discussion || "",
+          },
+          feature: {
+            featureName: data.feature?.featureName || "",
+            featureDescription: {
+              startTime: data.feature?.featureDescription?.startTime instanceof Date
+                ? data.feature.featureDescription.startTime.toISOString()
+                : data.feature?.featureDescription?.startTime || "",
+              endTime: data.feature?.featureDescription?.endTime instanceof Date
+                ? data.feature.featureDescription.endTime.toISOString()
+                : data.feature?.featureDescription?.endTime || "",
+              requirementAnalysis: data.feature?.featureDescription?.requirementAnalysis || "",
+            },
+          },
+          whoCreatedIt: {
+            name: data.whoCreatedIt?.name || "",
+            empId: data.whoCreatedIt?.empId || "",
+            totalTime: Number(data.whoCreatedIt?.totalTime || 0),
+          },
+        },
+        diagramId: diagramId || "",
+        userStories,
+        trackingList,
+        retrospective,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(LOCAL_KEY(id), JSON.stringify(snapshot));
+    } catch (error) {
+      console.error("[DocForm] localStorage save failed:", error);
     }
   };
 
-  /**
-   * DRAFT FLOW + HYDRATION: Read documentId from URL and load existing data.
-   * Priority: 1) API data  2) localStorage fallback
-   */
-  useEffect(() => {
-    const initForm = async () => {
-      const docIdParam = searchParams.get("id");
-      console.log("[DocForm] useEffect triggered — URL id =", docIdParam);
+  const restoreFromLocal = (id) => {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEY(id));
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
 
-      if (docIdParam) {
-        setDocId(docIdParam);
+  const clearLocal = (id) => {
+    try {
+      localStorage.removeItem(LOCAL_KEY(id));
+      localStorage.removeItem(PROGRESS_KEY(id));
+    } catch {}
+  };
 
-        // Try API hydration first
-        let hydratedFromApi = false;
-        console.log("[DocForm] Hydrating form for docId:", docIdParam);
-        try {
-          const response = await getDocumentById(docIdParam);
-          const doc = response.data;
+  const persistProgress = (id, step = currentStep, completed = completedSteps) => {
+    try {
+      localStorage.setItem(PROGRESS_KEY(id), JSON.stringify({ currentStep: step, completedSteps: completed }));
+    } catch {}
+  };
 
-          if (doc) {
-            // Check if API doc has meaningful data (not just an empty draft)
-            const hasApiData = doc.requirementElicitation?.discussion ||
-              doc.feature?.featureName ||
-              doc.requirementElicitation?.startTime;
-
-            if (hasApiData) {
-              console.log("[DocForm] Document data loaded from API:", doc);
-
-              reset({
-                requirementElicitation: {
-                  startTime: doc.requirementElicitation?.startTime
-                    ? new Date(doc.requirementElicitation.startTime)
-                    : null,
-                  endTime: doc.requirementElicitation?.endTime
-                    ? new Date(doc.requirementElicitation.endTime)
-                    : null,
-                  discussion: doc.requirementElicitation?.discussion || "",
-                },
-                feature: {
-                  featureName: doc.feature?.featureName || "",
-                  featureDescription: {
-                    startTime: doc.feature?.featureDescription?.startTime
-                      ? new Date(doc.feature.featureDescription.startTime)
-                      : null,
-                    endTime: doc.feature?.featureDescription?.endTime
-                      ? new Date(doc.feature.featureDescription.endTime)
-                      : null,
-                    requirementAnalysis:
-                      doc.feature?.featureDescription?.requirementAnalysis || "",
-                  },
-                },
-                designDiagram: {
-                  diagramId: doc.designDiagram?.diagramId || "",
-                },
-                whoCreatedIt: {
-                  name: doc.whoCreatedIt?.name || "",
-                  empId: doc.whoCreatedIt?.empId || "",
-                  totalTime: doc.whoCreatedIt?.totalTime || 0,
-                },
-              });
-
-              setUserStories(doc.featureEstimate?.userStoryDistribution || []);
-              setTrackingList(
-                doc.trackingAndReleaseDetails?.length
-                  ? doc.trackingAndReleaseDetails
-                  : [{ userStoryNumber: "", userStoryLink: "", prLinks: [], codeDescription: "", pipelineBuildLinks: [], environmentDeployLinks: [] }]
-              );
-              setRetrospective(doc.retrospectiveSection || []);
-
-              if (doc.designDiagram?.diagramId) {
-                setDiagramId(doc.designDiagram.diagramId);
-              }
-
-              hydratedFromApi = true;
-            }
-          }
-        } catch (err) {
-          console.error("[DocForm] API hydration failed:", err);
-        }
-
-        // Fallback: restore from localStorage if API had no data
-        if (!hydratedFromApi) {
-          const local = restoreFromLocal(docIdParam);
-          if (local) {
-            console.log("[DocForm] Restoring from localStorage:", local);
-            const fv = local.formValues;
-            reset({
-              requirementElicitation: {
-                startTime: fv.requirementElicitation?.startTime
-                  ? new Date(fv.requirementElicitation.startTime)
-                  : null,
-                endTime: fv.requirementElicitation?.endTime
-                  ? new Date(fv.requirementElicitation.endTime)
-                  : null,
-                discussion: fv.requirementElicitation?.discussion || "",
-              },
-              feature: {
-                featureName: fv.feature?.featureName || "",
-                featureDescription: {
-                  startTime: fv.feature?.featureDescription?.startTime
-                    ? new Date(fv.feature.featureDescription.startTime)
-                    : null,
-                  endTime: fv.feature?.featureDescription?.endTime
-                    ? new Date(fv.feature.featureDescription.endTime)
-                    : null,
-                  requirementAnalysis:
-                    fv.feature?.featureDescription?.requirementAnalysis || "",
-                },
-              },
-              whoCreatedIt: {
-                name: fv.whoCreatedIt?.name || "",
-                empId: fv.whoCreatedIt?.empId || "",
-                totalTime: fv.whoCreatedIt?.totalTime || 0,
-              },
-            });
-
-            if (local.diagramId) setDiagramId(local.diagramId);
-            if (local.userStories?.length) setUserStories(local.userStories);
-            if (local.trackingList?.length) setTrackingList(local.trackingList);
-            if (local.retrospective?.length) setRetrospective(local.retrospective);
-          }
-        }
-
-        setMounted(true);
-        return;
+  const restoreProgress = (id) => {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY(id));
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const completed = normalizeCompleted(parsed.completedSteps);
+      const step = Number(parsed.currentStep);
+      setCompletedSteps(completed);
+      if (Number.isInteger(step) && step >= 0 && step < STEPS.length) {
+        const canResume = step === 0 || STEPS.slice(0, step).every((_, index) => completed.includes(index));
+        setCurrentStep(canResume ? step : completed.length);
       }
+    } catch {}
+  };
 
-      // No id in URL → create a draft document
-      console.log("[DocForm] No id in URL, creating draft...");
-      setIsCreatingDraft(true);
+  const hydrateForm = (source) => {
+    reset({
+      requirementElicitation: {
+        startTime: normalizeDate(source.requirementElicitation?.startTime),
+        endTime: normalizeDate(source.requirementElicitation?.endTime),
+        discussion: source.requirementElicitation?.discussion || "",
+      },
+      feature: {
+        featureName: source.feature?.featureName || "",
+        featureDescription: {
+          startTime: normalizeDate(source.feature?.featureDescription?.startTime),
+          endTime: normalizeDate(source.feature?.featureDescription?.endTime),
+          requirementAnalysis: source.feature?.featureDescription?.requirementAnalysis || "",
+        },
+      },
+      designDiagram: { diagramId: source.designDiagram?.diagramId || "" },
+      whoCreatedIt: {
+        name: source.whoCreatedIt?.name || "",
+        empId: source.whoCreatedIt?.empId || "",
+        totalTime: source.whoCreatedIt?.totalTime || 0,
+      },
+    });
 
-      try {
-        const response = await createDraft();
-        if (response?.data?._id) {
-          const newDocId = response.data._id;
-          setDocId(newDocId);
-          setMounted(true);
-          router.replace(`/create-doc?id=${newDocId}`);
-        } else {
-          setMounted(true);
-        }
-      } catch (err) {
-        console.error("[DocForm] Failed to create draft:", err);
-        setMounted(true);
-      } finally {
-        setIsCreatingDraft(false);
+    setUserStories(source.featureEstimate?.userStoryDistribution || []);
+    setTrackingList(source.trackingAndReleaseDetails?.length ? source.trackingAndReleaseDetails : [{ ...emptyTrackingItem }]);
+    setRetrospective(source.retrospectiveSection || []);
+    if (source.designDiagram?.diagramId) setDiagramId(source.designDiagram.diagramId);
+  };
+
+  const canVisitStep = (stepIndex) => stepIndex === 0 || STEPS.slice(0, stepIndex).every((_, index) => completedSteps.includes(index));
+
+  const validateCurrentStep = async () => {
+    setFormError("");
+    const fields = STEP_FIELDS[currentStep];
+    if (!fields?.length) return true;
+
+    const valid = await trigger(fields, { shouldFocus: true });
+    if (!valid) setFormError("Please complete the required fields before continuing.");
+    return valid;
+  };
+
+  const saveDraft = async ({ silent = false } = {}) => {
+    if (!docId || isLocked) return false;
+
+    if (!silent) setIsSaving(true);
+    try {
+      const payload = getPayload();
+      await updateDraft(docId, payload);
+      saveToLocal(docId);
+      if (silent) {
+        setAutoSaveStatus("Progress auto-saved ✓");
       }
-    };
+      return true;
+    } catch (error) {
+      console.error("[DocForm] Draft save failed:", error);
+      if (!silent) setFormError("Failed to save draft: " + error.message);
+      return false;
+    } finally {
+      if (!silent) setIsSaving(false);
+    }
+  };
 
-    initForm();
-  }, [searchParams, router, reset]);
+  const handleSaveAndContinue = async () => {
+    const valid = await validateCurrentStep();
+    if (!valid) return;
 
-  /**
-   * DIAGRAM LOADING: Once docId is set, load existing diagram for preview
-   */
-  useEffect(() => {
-    if (!docId) return;
+    const saved = await saveDraft();
+    if (!saved) return;
 
-    const loadDiagram = async () => {
-      setIsLoadingDiagram(true);
-      console.log("[DocForm] Loading diagram for docId:", docId);
+    const nextStep = Math.min(currentStep + 1, STEPS.length - 1);
+    const nextCompleted = Array.from(new Set([...completedSteps, currentStep])).sort((a, b) => a - b);
+    setCompletedSteps(nextCompleted);
+    setCurrentStep(nextStep);
+    persistProgress(docId, nextStep, nextCompleted);
+  };
 
-      try {
-        const response = await getDiagramByDocumentId(docId);
-        console.log("[DocForm] getDiagramByDocumentId response:", response);
-
-        if (response && response.data) {
-          console.log("[DocForm] Found existing diagram:", response.data._id);
-          setSavedDiagram(response.data);
-          setDiagramId(response.data._id);
-          setValue("designDiagram.diagramId", response.data._id);
-        } else {
-          console.log(
-            "[DocForm] No diagram found for this document (normal for new docs)",
-          );
-        }
-      } catch (err) {
-        console.log(
-          "[DocForm] Error loading diagram (may be 404 for new doc):",
-          err.message,
-        );
-      } finally {
-        setIsLoadingDiagram(false);
-        console.log("[DocForm] Diagram loading complete");
-      }
-    };
-
-    loadDiagram();
-  }, [docId, setValue]);
+  const handleStepClick = (stepIndex) => {
+    if (isLocked || canVisitStep(stepIndex)) {
+      setCurrentStep(stepIndex);
+      if (docId) persistProgress(docId, stepIndex, completedSteps);
+    }
+  };
 
   const addTracking = () => {
-    setTrackingList((prev) => [
-      ...prev,
-      {
-        userStoryNumber: "",
-        userStoryLink: "",
-        prLinks: [],
-        codeDescription: "",
-        pipelineBuildLinks: [],
-        environmentDeployLinks: [],
-      },
-    ]);
+    setTrackingList((prev) => [...prev, { ...emptyTrackingItem }]);
   };
 
   const handleTrackingChange = (index, field, value) => {
@@ -388,365 +316,261 @@ const DocForm = () => {
 
   const handleDiagramNavigation = async () => {
     if (docId) {
-      // Always save to localStorage first (instant, reliable)
       saveToLocal(docId);
+      await saveDraft({ silent: true });
+      router.push(`/diagram-editor?docId=${docId}`);
+      return;
+    }
+    router.push("/diagram-editor");
+  };
 
-      // Then try API save too
-      try {
-        const currentData = getValues();
-        const payload = getPayload(currentData);
-        await updateDraft(docId, payload);
-        console.log("[DocForm] Auto-saved draft to API before navigating to diagram tool");
-      } catch (err) {
-        console.warn("[DocForm] API auto-save failed, but localStorage is safe:", err.message);
-      }
-      const navUrl = `/diagram-editor?docId=${docId}`;
-      router.push(navUrl);
-    } else {
-      router.push(`/diagram-editor`);
+  const handleFinalSubmit = async () => {
+    if (!docId || isLocked) return;
+
+    setFormError("");
+    setIsSubmitting(true);
+    try {
+      await submitDocument(docId, getPayload());
+      clearLocal(docId);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("[DocForm] Submit failed:", error);
+      setFormError("Failed to submit: " + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Show loading while creating draft
+  const handleDownload = async () => {
+    if (!docId) return;
+    await exportDocument(docId, doc?.feature?.featureName || "document");
+  };
+
+  const handleDelete = async () => {
+    if (!docId || !confirm("Are you sure you want to delete this document?")) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteDocument(docId);
+      clearLocal(docId);
+      router.push("/dashboard");
+    } catch (error) {
+      alert("Failed to delete document: " + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  useEffect(() => {
+    const initForm = async () => {
+      const docIdParam = searchParams.get("id");
+
+      if (docIdParam) {
+        setDocId(docIdParam);
+        restoreProgress(docIdParam);
+
+        let hydratedFromApi = false;
+        try {
+          const response = await getDocumentById(docIdParam);
+          const apiDoc = response.data;
+          if (apiDoc) {
+            if (apiDoc.status === "completed") {
+              clearLocal(docIdParam);
+              router.replace("/dashboard");
+              return;
+            }
+
+            setDoc(apiDoc);
+            hydrateForm(apiDoc);
+            hydratedFromApi = true;
+          }
+        } catch (error) {
+          console.error("[DocForm] API hydration failed:", error);
+        }
+
+        if (!hydratedFromApi) {
+          const local = restoreFromLocal(docIdParam);
+          if (local?.formValues) {
+            hydrateForm({
+              ...local.formValues,
+              designDiagram: { diagramId: local.diagramId || "" },
+              featureEstimate: { userStoryDistribution: local.userStories || [] },
+              trackingAndReleaseDetails: local.trackingList || [],
+              retrospectiveSection: local.retrospective || [],
+            });
+          }
+        }
+
+        didHydrateRef.current = true;
+        return;
+      }
+
+      setIsCreatingDraft(true);
+      try {
+        const response = await createDraft();
+        if (response?.data?._id) {
+          const newDocId = response.data._id;
+          setDocId(newDocId);
+          setDoc(response.data);
+          router.replace(`/create-doc?id=${newDocId}`);
+        }
+      } catch (error) {
+        console.error("[DocForm] Failed to create draft:", error);
+        setFormError("Failed to create draft: " + error.message);
+      } finally {
+        didHydrateRef.current = true;
+        setIsCreatingDraft(false);
+      }
+    };
+
+    initForm();
+  }, [searchParams, router, reset]);
+
+  useEffect(() => {
+    if (!docId) return;
+
+    const loadDiagram = async () => {
+      setIsLoadingDiagram(true);
+      try {
+        const response = await getDiagramByDocumentId(docId);
+        if (response?.data) {
+          setSavedDiagram(response.data);
+          setDiagramId(response.data._id);
+          setValue("designDiagram.diagramId", response.data._id);
+        }
+      } catch (error) {
+        console.log("[DocForm] No diagram found for this document:", error.message);
+      } finally {
+        setIsLoadingDiagram(false);
+      }
+    };
+
+    loadDiagram();
+  }, [docId, setValue]);
+
+  useEffect(() => {
+    if (!docId) return;
+    persistProgress(docId, currentStep, completedSteps);
+  }, [docId, currentStep, completedSteps]);
+
+  useEffect(() => {
+    if (!docId || isLocked || !didHydrateRef.current) return;
+
+    setAutoSaveStatus("");
+    const timer = setTimeout(() => {
+      saveDraft({ silent: true });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [docId, isLocked, watchedValues, userStories, trackingList, retrospective, diagramId]);
+
+  const formProps = useMemo(
+    () => ({ register, setValue, watch }),
+    [register, setValue, watch],
+  );
+
+  const stepProps = {
+    docId,
+    diagramId,
+    savedDiagram,
+    isLoadingDiagram,
+    isLocked,
+    onDiagramNavigation: handleDiagramNavigation,
+    userStories,
+    setUserStories,
+    trackingList,
+    addTracking,
+    handleTrackingChange,
+    retrospective,
+    setRetrospective,
+    values: getValues(),
+    onEditStep: handleStepClick,
+  };
+
   if (isCreatingDraft) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
+          <Loader2 className="h-10 w-10 animate-spin text-gray-800" />
           <p className="text-gray-500">Creating document draft...</p>
         </div>
       </div>
     );
   }
 
+  if (isLocked) {
+    return (
+      <div className="min-h-screen bg-gray-100 px-6 py-10">
+        <div className="mx-auto max-w-3xl rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Completed document</p>
+          <h1 className="mt-2 text-2xl font-semibold text-gray-950">{doc?.feature?.featureName || "Untitled Document"}</h1>
+          <p className="mt-3 text-gray-600">This document is locked because it has already been completed.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button type="button" onClick={handleDownload} className="gap-2">
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={isDeleting} className="gap-2">
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="p-10 max-w-4xl mx-auto space-y-10">
-        {/*  Requirement Elucidation */}
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Requirement Elucidation</h2>
+    <form onSubmit={handleSubmit(handleFinalSubmit)} className="min-h-screen bg-gray-100">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[300px_1fr]">
+        <StepSidebar
+          steps={STEPS}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          onStepClick={handleStepClick}
+        />
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Start */}
-            <div>
-              <Label>Start Time</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2 justify-start"
-                  >
-                    {startTime instanceof Date
-                      ? format(startTime, "PPP")
-                      : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <Calendar
-                    mode="single"
-                    selected={startTime}
-                    onSelect={(date) =>
-                      setValue("requirementElicitation.startTime", date)
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* End */}
-            <div>
-              <Label>End Time</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2 justify-start"
-                  >
-                    {endTime instanceof Date
-                      ? format(endTime, "PPP")
-                      : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <Calendar
-                    mode="single"
-                    selected={endTime}
-                    onSelect={(date) =>
-                      setValue("requirementElicitation.endTime", date)
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Discussion */}
-          <div>
-            <Label>Discussion</Label>
-            <Textarea
-              placeholder="Start discussion..."
-              {...register("requirementElicitation.discussion")}
-              className="mt-2 h-32 rounded-xl"
-            />
-          </div>
-        </div>
-        {/*  Feature Section */}
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Feature</h2>
-
-          {/* Feature Name */}
-          <div>
-            <Label>Feature Name</Label>
-            <Input
-              placeholder="Enter feature name"
-              {...register("feature.featureName")}
-              className="mt-2 rounded-lg"
-            />
-          </div>
-
-          {/* Feature Description */}
-          <div className="border rounded-xl p-5 space-y-6 bg-gray-50">
-            <h3 className="font-medium">Feature Description</h3>
-
-            {/* Start + End */}
-            <div className="grid grid-cols-2 gap-6">
+        <main className="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <Label>Start Time</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-2 justify-start"
-                    >
-                      {featureStart instanceof Date
-                        ? format(featureStart, "PPP")
-                        : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <Calendar
-                      mode="single"
-                      selected={featureStart}
-                      onSelect={(date) =>
-                        setValue("feature.featureDescription.startTime", date)
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
+                <p className="text-sm font-medium text-blue-700">
+                  Step {currentStep + 1} of {STEPS.length}
+                </p>
+                <h1 className="text-2xl font-semibold text-gray-950">{STEPS[currentStep].title}</h1>
               </div>
-
-              <div>
-                <Label>End Time</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-2 justify-start"
-                    >
-                      {featureEnd instanceof Date
-                        ? format(featureEnd, "PPP")
-                        : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <Calendar
-                      mode="single"
-                      selected={featureEnd}
-                      onSelect={(date) =>
-                        setValue("feature.featureDescription.endTime", date)
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            {/* Analysis */}
-            <div>
-              <Label>Requirement Analysis</Label>
-              <Textarea
-                placeholder="Code-level planning, classes, logic..."
-                {...register("feature.featureDescription.requirementAnalysis")}
-                className="mt-2 h-36 rounded-xl"
-              />
+              <div className="min-h-5 text-sm text-gray-500">{autoSaveStatus}</div>
             </div>
           </div>
-        </div>
 
-        <div className="border rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium">Design Diagram</span>
-              <p className="text-xs text-gray-400 mt-1">
-                DocId: {docId || "N/A"} | Diagram: {diagramId || "None"}
-              </p>
-            </div>
+          <div className="px-6 py-6 transition-opacity duration-200">
+            <StepRenderer currentStep={currentStep} formProps={formProps} stepProps={stepProps} />
+            {formError && <p className="mt-5 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p>}
+          </div>
 
-            {isLoadingDiagram ? (
-              <span className="text-sm text-gray-500">Loading diagram...</span>
-            ) : savedDiagram?.image ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDiagramNavigation}
-                className="gap-2"
-              >
-                ✏️ Edit Diagram
+          <div className="flex flex-col-reverse gap-3 border-t border-gray-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={currentStep === 0 || isSaving || isSubmitting}
+              onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
+            >
+              Back
+            </Button>
+
+            {isReviewStep ? (
+              <Button type="submit" disabled={isSubmitting || isSaving} className="gap-2">
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                Submit Document
               </Button>
             ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleDiagramNavigation}
-                className="gap-2"
-              >
-                ➕ Create Diagram
+              <Button type="button" disabled={isSaving || isSubmitting} onClick={handleSaveAndContinue} className="gap-2">
+                {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                Save & Continue
               </Button>
             )}
           </div>
-
-          {/* Preview */}
-          {savedDiagram?.image && !isLoadingDiagram && (
-            <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2">
-              <img
-                src={`${API_URL}/${savedDiagram.image}`}
-                alt="diagram preview"
-                className="w-full h-auto object-contain max-h-80 rounded-md"
-                onError={(e) => {
-                  console.warn("[DocForm] Failed to load diagram image");
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            </div>
-          )}
-        </div>
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Feature Estimate</h2>
-
-          <div>
-            <p className="font-medium mb-2">User Story Distribution</p>
-            <EditableTable value={userStories} onChange={setUserStories} />
-          </div>
-        </div>
-
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Tracking & Release Details</h2>
-
-          {trackingList.map((item, index) => (
-            <div key={index} className="border p-4 rounded-xl space-y-4">
-              {/* User Story Number */}
-              <div>
-                <label className="font-medium">User Story Number</label>
-                <Input
-                  className="mt-2 w-64"
-                  value={item.userStoryNumber}
-                  onChange={(e) =>
-                    handleTrackingChange(
-                      index,
-                      "userStoryNumber",
-                      e.target.value,
-                    )
-                  }
-                />
-              </div>
-
-              {/* User Story Link */}
-              <div>
-                <label className="font-medium">User Story Link</label>
-                <Input
-                  className="mt-2 w-96"
-                  value={item.userStoryLink}
-                  onChange={(e) =>
-                    handleTrackingChange(index, "userStoryLink", e.target.value)
-                  }
-                />
-              </div>
-
-              {/* PR Links */}
-              <MultiInput
-                label="PR Links"
-                value={item.prLinks}
-                onChange={(val) => handleTrackingChange(index, "prLinks", val)}
-              />
-
-              {/* Code Description */}
-              <div>
-                <label className="font-medium">Code Description</label>
-                <textarea
-                  className="mt-2 w-full h-28 border rounded-xl p-3"
-                  value={item.codeDescription}
-                  onChange={(e) =>
-                    handleTrackingChange(
-                      index,
-                      "codeDescription",
-                      e.target.value,
-                    )
-                  }
-                />
-              </div>
-
-              {/* Pipeline Links */}
-              <MultiInput
-                label="Pipeline Build Links"
-                value={item.pipelineBuildLinks}
-                onChange={(val) =>
-                  handleTrackingChange(index, "pipelineBuildLinks", val)
-                }
-              />
-
-              {/* Environment Links */}
-              <MultiInput
-                label="Environment Deploy Links"
-                value={item.environmentDeployLinks}
-                onChange={(val) =>
-                  handleTrackingChange(index, "environmentDeployLinks", val)
-                }
-              />
-            </div>
-          ))}
-
-          {/* ADD BUTTON */}
-          <Button type="button" onClick={addTracking}>
-            + Add Another User Story
-          </Button>
-        </div>
-
-        {/*  Who Created It */}
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Who Created It</h2>
-
-          <div className="grid grid-cols-3 gap-6">
-            <div>
-              <label className="font-medium">Name</label>
-              <Input className="mt-2" {...register("whoCreatedIt.name")} />
-            </div>
-
-            <div>
-              <label className="font-medium">Emp ID</label>
-              <Input className="mt-2" {...register("whoCreatedIt.empId")} />
-            </div>
-
-            <div>
-              <label className="font-medium">Total Time</label>
-              <Input
-                type="number"
-                className="mt-2"
-                {...register("whoCreatedIt.totalTime")}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/*  Retrospective Section */}
-        <div className="border rounded-2xl p-6 space-y-6 shadow-sm">
-          <h2 className="text-lg font-semibold">Retrospection Section</h2>
-
-          <EditableTable value={retrospective} onChange={setRetrospective} />
-        </div>
-        {/* Submit */}
-        <Button type="submit" className="w-full h-11 text-base">
-          Submit
-        </Button>
+        </main>
       </div>
     </form>
   );

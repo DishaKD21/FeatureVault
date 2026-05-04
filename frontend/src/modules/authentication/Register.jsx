@@ -7,6 +7,7 @@ import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../authentication/firebase";
 import { toast } from "react-toastify";
+import { getPostAuthRedirect, syncFirebaseUser } from "@/components/auth/useAuth";
 
 const Register = () => {
   const router = useRouter();
@@ -37,6 +38,12 @@ const Register = () => {
     }
     return newErrors;
   };
+
+  const completeSignup = async (user) => {
+    await syncFirebaseUser(user);
+    router.push(getPostAuthRedirect());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -58,7 +65,7 @@ const Register = () => {
 
         toast.success("Registration successful!");
         console.log("Registered:", userCredential.user);
-        router.push("/");
+        await completeSignup(userCredential.user);
 
       } catch (error) {
         toast.error(error.message);
@@ -71,7 +78,7 @@ const Register = () => {
       const result = await signInWithPopup(auth, provider);
       toast.success("Google signup successful!");
       console.log("Google User:", result.user);
-      router.push("/");
+      await completeSignup(result.user);
     } catch (error) {
       toast.error(error.message);
     }

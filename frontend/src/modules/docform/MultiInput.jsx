@@ -47,6 +47,7 @@ const MultiInput = ({ label, value, onChange }) => {
 
           {values.length > 1 && (
             <Button
+              type="button"
               variant="destructive"
               onClick={() => removeField(i)}
             >
@@ -56,7 +57,7 @@ const MultiInput = ({ label, value, onChange }) => {
         </div>
       ))}
 
-      <Button variant="secondary" onClick={addField}>
+      <Button type="button" variant="secondary" onClick={addField}>
         + Add
       </Button>
     </div>

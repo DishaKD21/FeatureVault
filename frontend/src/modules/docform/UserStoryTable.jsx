@@ -225,6 +225,7 @@ export default function EditableTable({ value, onChange }) {
       <div className="nt-page">
        {!tableCreated && (
   <button
+    type="button"
     className="nt-create-table"
     onClick={() => {
       editor
@@ -251,6 +252,7 @@ export default function EditableTable({ value, onChange }) {
     </div>
 
     <button
+      type="button"
       className="nt-add-row"
       onClick={() => editor.chain().focus().addRowAfter().run()}
     >
@@ -258,6 +260,7 @@ export default function EditableTable({ value, onChange }) {
     </button>
 
     <button
+      type="button"
       className="nt-add-col"
       onClick={() => editor.chain().focus().addColumnAfter().run()}
     >
@@ -273,6 +276,7 @@ export default function EditableTable({ value, onChange }) {
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            type="button"
             className="nt-ctx-item"
             disabled={tableSize.rows <= 1}
             title={tableSize.rows <= 1 ? "At least 1 row required" : ""}
@@ -287,6 +291,7 @@ export default function EditableTable({ value, onChange }) {
           <div className="nt-ctx-sep" />
 
           <button
+            type="button"
             className="nt-ctx-item"
             disabled={tableSize.cols <= 1}
             title={tableSize.cols <= 1 ? "At least 1 column required" : ""}

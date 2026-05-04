@@ -1,21 +1,16 @@
 import admin from "firebase-admin";
+import serviceAccount from "../../serviceAccountKey.json" with { type: "json" };
 
-const serviceAccount = {
-  type: "service_account",
-  project_id: process.env.FIREBASE_PROJECT_ID,
-  private_key: process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
-    : undefined,
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+const firebaseCredentials = {
+  projectId: serviceAccount.project_id || serviceAccount.projectId,
+  clientEmail: serviceAccount.client_email,
+  privateKey: serviceAccount.private_key?.replace(/\\n/g, "\n"),
 };
 
-if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
-  console.error("❌ Missing Firebase env variables!");
-  process.exit(1);
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseCredentials),
+  });
 }
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 export default admin;

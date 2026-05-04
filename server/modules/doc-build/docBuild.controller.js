@@ -4,7 +4,7 @@ export async function exportDocument(req, res) {
   try {
     const { id } = req.params;
 
-    const buffer = await generateDocBufferById(id);
+    const buffer = await generateDocBufferById(id, req.user.id);
 
     res.setHeader(
       "Content-Type",

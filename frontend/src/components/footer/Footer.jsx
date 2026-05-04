@@ -1,9 +1,27 @@
 "use client";
 import  Link  from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import logo from "../../../public/logo-dark.png"
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { isAuthenticated, saveRedirectPath } from "@/components/auth/useAuth";
+
 const Footer = () => {
+  const router = useRouter();
+  const [redirectingTo, setRedirectingTo] = useState("");
+
+  const goProtected = (path) => {
+    setRedirectingTo(path);
+
+    if (!isAuthenticated()) {
+      saveRedirectPath(path);
+      router.push("/login");
+      return;
+    }
+
+    router.push(path);
+  };
+
   return (
     <div className="w-full flex justify-center items-center bg-white py-10">
       <div className="w-[90%] max-w-6xl border border-black rounded-2xl p-8">
@@ -27,8 +45,22 @@ const Footer = () => {
             </h3>
             <ul className="mt-2 space-y-1 text-gray-700 flex flex-col">
               <Link href="#features">Features</Link >
-              <Link href="/create-doc">Create Documentation</Link >
-              <Link href="/diagram-editor">Diagram Tool</Link >
+              <button
+                type="button"
+                disabled={redirectingTo === "/create-doc"}
+                onClick={() => goProtected("/create-doc")}
+                className="text-left disabled:cursor-wait disabled:text-gray-400"
+              >
+                Create Documentation
+              </button>
+              <button
+                type="button"
+                disabled={redirectingTo === "/diagram-editor"}
+                onClick={() => goProtected("/diagram-editor")}
+                className="text-left disabled:cursor-wait disabled:text-gray-400"
+              >
+                Diagram Tool
+              </button>
               <Link href="/feedback">Feedback</Link >
             </ul>
           </div>

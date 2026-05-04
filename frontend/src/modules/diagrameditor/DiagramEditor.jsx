@@ -19,7 +19,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import Sidebar from './sidebar';
-import { createDiagram, updateDiagram, getDiagramByDocumentId } from '@/lib/diagramApi';
+import { createDiagram, updateDiagram, getDiagramByDocumentId, getDiagramById } from '@/lib/diagramApi';
 import { toPng } from 'html-to-image';
 
 /* ─── ID generator ─── */
@@ -203,12 +203,44 @@ function Playground() {
       setIsLoading(true);
       
       try {
-        // Read docId from URL once on mount
+        // Read diagramId/docId from URL once on mount
+        const diagramIdParam = searchParams.get('diagramId');
         const docIdParam = searchParams.get('docId');
+        console.log('[DiagramEditor] URL diagramId =', diagramIdParam);
         console.log('[DiagramEditor] URL docId =', docIdParam);
         console.log('[DiagramEditor] Mode:', docIdParam ? 'DOCUMENT' : 'STANDALONE');
         
-        if (docIdParam) {
+        if (diagramIdParam && !docIdParam) {
+          // STANDALONE EDIT MODE: load an existing independent diagram by id
+          console.log('[DiagramEditor] Standalone edit mode detected, diagramId =', diagramIdParam);
+          setDocId(null);
+          docIdRef.current = null;
+          setDiagramId(diagramIdParam);
+          diagramIdRef.current = diagramIdParam;
+          setIsEditMode(true);
+          setIsStandaloneMode(true);
+
+          const response = await getDiagramById(diagramIdParam);
+          const diagram = response?.data;
+
+          if (diagram?.documentId) {
+            console.warn('[DiagramEditor] Requested diagram is linked to a document; redirecting to document mode');
+            router.replace(`/diagram-editor?docId=${diagram.documentId}`);
+            return;
+          }
+
+          const diagramData = diagram?.json;
+          if (diagramData && diagramData.nodes && diagramData.edges) {
+            const { nodes: savedNodes = [], edges: savedEdges = [] } = diagramData;
+            const maxId = savedNodes.reduce((max, n) => {
+              const num = parseInt(n.id.replace('node_', ''), 10);
+              return isNaN(num) ? max : Math.max(max, num);
+            }, -1);
+            id = maxId + 1;
+            setNodes(savedNodes);
+            setEdges(savedEdges);
+          }
+        } else if (docIdParam) {
           // DOCUMENT MODE: docId exists in URL
           console.log('[DiagramEditor] Document mode detected, docId =', docIdParam);
           setDocId(docIdParam);
@@ -364,12 +396,26 @@ function Playground() {
         
         // Also save to backend with documentId = null
         try {
-          const response = await createDiagram({
-            diagramJson,
-            diagramImage: diagramImageDataUrl,
-            documentId: null,
-          });
-          console.log('[DiagramEditor] Standalone diagram saved to backend:', response);
+          if (isUpdating) {
+            const response = await updateDiagram({
+              id: currentDiagramId,
+              diagramJson,
+              diagramImage: diagramImageDataUrl,
+            });
+            console.log('[DiagramEditor] Standalone diagram updated:', response);
+          } else {
+            const response = await createDiagram({
+              diagramJson,
+              diagramImage: diagramImageDataUrl,
+              documentId: null,
+            });
+            if (response?.data?._id) {
+              setDiagramId(response.data._id);
+              diagramIdRef.current = response.data._id;
+              setIsEditMode(true);
+            }
+            console.log('[DiagramEditor] Standalone diagram saved to backend:', response);
+          }
         } catch (backendErr) {
           console.warn('[DiagramEditor] Backend save failed (standalone), continuing:', backendErr);
         }

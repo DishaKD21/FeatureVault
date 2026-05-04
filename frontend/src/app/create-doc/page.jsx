@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import DocForm from '@/modules/docform/DocForm';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function LoadingFallback() {
   return (
@@ -16,10 +17,12 @@ function LoadingFallback() {
 
 export default function CreateDocPage() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <div>
-        <DocForm />
-      </div>
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<LoadingFallback />}>
+        <div>
+          <DocForm />
+        </div>
+      </Suspense>
+    </ProtectedRoute>
   );
 }

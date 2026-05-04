@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import "@mantine/core/styles.css";
 import "./globals.css";
 import ToastProvider from "@/components/toast-provider/ToastProvider";
+import Providers from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,8 +25,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Providers>
           <ToastProvider />  
-        {children}
+          {children}
+        </Providers>
       </body>
     </html>
   );

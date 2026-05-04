@@ -1,9 +1,10 @@
 import express from "express";
-import { firebaseLogin } from "./user.controller.js";
 import { verifyToken } from "./middleware.js";
 
 const router = express.Router();
 
-router.post("/auth/firebase", verifyToken, firebaseLogin);
+router.post("/auth/firebase", verifyToken, (req, res) => {
+	return res.status(200).json(req.user);
+});
 
 export default router;
