@@ -4,6 +4,7 @@ import { sendSuccess } from "../../utils/sendSuccess.js";
 import { ApiError } from "../../utils/apiError.js";
 import { EntityMessages } from "../../utils/messages.js";
 import Documentation from "../documentation-api/documentation.model.js";
+import { generateDiagramExplanation } from "../../services/aiService.js";
 
 const messages = EntityMessages("Diagram");
 
@@ -61,7 +62,10 @@ export const updateDiagram = asyncHandler(async (req, res) => {
   }
 
   const updateData = {};
-  if (jsonData !== undefined) updateData.json = jsonData;
+  if (jsonData !== undefined) {
+    updateData.json = jsonData;
+    updateData.explanation = "";
+  }
   if (req.file?.path) updateData.image = req.file.path;
 
   const updated = await service.updateDiagram(req.params.id, req.user.id, updateData);
@@ -75,4 +79,38 @@ export const deleteDiagram = asyncHandler(async (req, res) => {
   if (!deleted) throw new ApiError(404, messages.notFound);
 
   return sendSuccess(res, null, messages.deleted);
+});
+
+export const generateExplanation = asyncHandler(async (req, res) => {
+  const { documentId, diagramId } = req.body;
+
+  const ownedDocument = await Documentation.exists({
+    _id: documentId,
+    createdBy: req.user.id,
+  });
+
+  if (!ownedDocument) throw new ApiError(404, "Document not found");
+
+  const diagram = await service.getDiagramById(diagramId, req.user.id);
+  if (!diagram) throw new ApiError(404, "Diagram not found");
+
+  if (!diagram.documentId || diagram.documentId.toString() !== documentId) {
+    throw new ApiError(400, "Diagram is not linked to the provided document");
+  }
+
+  const aiResponse = await generateDiagramExplanation({ documentId, diagramId });
+
+  if (aiResponse?.explanation) {
+    await service.updateDiagram(diagramId, req.user.id, {
+      explanation: aiResponse.explanation,
+    });
+  }
+
+  const refreshed = await service.getDiagramById(diagramId, req.user.id);
+
+  return sendSuccess(
+    res,
+    { explanation: refreshed?.explanation || aiResponse?.explanation || "" },
+    "Explanation generated"
+  );
 });

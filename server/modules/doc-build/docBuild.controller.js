@@ -2,9 +2,10 @@ import { generateDocBufferById } from "./docBuild.service.js";
 
 export async function exportDocument(req, res) {
   try {
-    const { id } = req.params;
+    const { id, documentId } = req.params;
+    const targetId = id || documentId;
 
-    const buffer = await generateDocBufferById(id, req.user.id);
+    const buffer = await generateDocBufferById(targetId, req.user.id);
 
     res.setHeader(
       "Content-Type",

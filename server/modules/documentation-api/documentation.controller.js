@@ -3,6 +3,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendSuccess } from "../../utils/sendSuccess.js";
 import { ApiError } from "../../utils/apiError.js";
 import { EntityMessages } from "../../utils/messages.js";
+import Diagram from "../diagram-api/diagram.model.js";
 
 const messages = EntityMessages("Document");
 
@@ -16,7 +17,21 @@ export const getDocumentById = asyncHandler(async (req, res) => {
   if (!doc) {
     throw new ApiError(404, messages.notFound);
   }
-  return sendSuccess(res, doc, messages.fetched);
+
+  const payload = doc.toObject();
+
+  if (payload.designDiagram?.diagramId) {
+    const diagram = await Diagram.findOne({
+      _id: payload.designDiagram.diagramId,
+      createdBy: req.user.id,
+    }).lean();
+
+    if (diagram?.explanation) {
+      payload.designDiagram.explanation = diagram.explanation;
+    }
+  }
+
+  return sendSuccess(res, payload, messages.fetched);
 });
 
 export const createDraft = asyncHandler(async (req, res) => {

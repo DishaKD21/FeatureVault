@@ -19,6 +19,10 @@ export async function generateDocBufferById(id, createdBy) {
     if (diagram?.image) {
       data.designDiagram.imageLink = diagram.image;
     }
+
+    if (diagram?.explanation) {
+      data.designDiagram.explanation = diagram.explanation;
+    }
   }
 
   const doc = await buildDocument(data);

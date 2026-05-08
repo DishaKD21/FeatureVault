@@ -14,6 +14,7 @@ const upload = multer({ storage });
 
 const diagramRouter = Router();
 
+diagramRouter.post("/generate-explanation", verifyToken, validate(zod.generateExplanationSchema), controller.generateExplanation);
 diagramRouter.get("/diagram", verifyToken, controller.getAllDiagrams);
 diagramRouter.get("/diagram/by-document/:documentId", verifyToken, validate(zod.documentIdSchema, "params"), controller.getDiagramByDocumentId);
 diagramRouter.get("/diagram/:id", verifyToken, validate(zod.diagramIdSchema, "params"), controller.getDiagramById);

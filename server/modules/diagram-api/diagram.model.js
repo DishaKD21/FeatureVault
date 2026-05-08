@@ -10,6 +10,11 @@ const diagramSchema = new mongoose.Schema(
     },
     json: mongoose.Schema.Types.Mixed,
     image: String,
+    explanation: {
+      
+      type: String,
+      default: "",
+    },
 
     documentId: {
       type: mongoose.Schema.Types.ObjectId,

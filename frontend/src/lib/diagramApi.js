@@ -177,3 +177,21 @@ export const deleteDiagram = async (diagramId) => {
 
   return res.json();
 };
+
+/**
+ * Generate an AI explanation for a diagram
+ */
+export const generateDiagramExplanation = async ({ documentId, diagramId }) => {
+  const res = await fetch(`${API_BASE}/generate-explanation`, {
+    method: "POST",
+    headers: getAuthHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ documentId, diagramId }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to generate explanation: ${res.status} ${errText}`);
+  }
+
+  return res.json();
+};

@@ -120,6 +120,11 @@ export async function buildDocument(data) {
     }
   }
 
+  if (data.designDiagram?.explanation) {
+    children.push(createHeading("Diagram Explanation"));
+    children.push(createParagraph(data.designDiagram.explanation));
+  }
+
   children.push(createHeading("User Story Distribution"));
 
   if (data.featureEstimate?.userStoryDistribution?.length) {

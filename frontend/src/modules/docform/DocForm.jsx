@@ -7,7 +7,7 @@ import { Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StepSidebar from "@/components/form/StepSidebar";
 import StepRenderer from "@/components/form/StepRenderer";
-import { getDiagramByDocumentId } from "@/lib/diagramApi";
+import { generateDiagramExplanation, getDiagramByDocumentId } from "@/lib/diagramApi";
 import {
   createDraft,
   deleteDocument,
@@ -84,6 +84,8 @@ const DocForm = () => {
   const [docId, setDocId] = useState(null);
   const [doc, setDoc] = useState(null);
   const [isLoadingDiagram, setIsLoadingDiagram] = useState(false);
+  const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
+  const [diagramExplanationError, setDiagramExplanationError] = useState("");
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -324,6 +326,48 @@ const DocForm = () => {
     router.push("/diagram-editor");
   };
 
+  const refreshDiagram = React.useCallback(async (documentId = docId) => {
+    if (!documentId) return null;
+
+    const response = await getDiagramByDocumentId(documentId);
+    if (response?.data) {
+      setSavedDiagram(response.data);
+      setDiagramId(response.data._id);
+      setValue("designDiagram.diagramId", response.data._id);
+      setDiagramExplanationError("");
+      return response.data;
+    }
+
+    return null;
+  }, [docId, setValue]);
+
+  const handleGenerateExplanation = async () => {
+    const targetDocId = docId;
+    const targetDiagramId = diagramId || savedDiagram?._id;
+
+    if (!targetDocId || !targetDiagramId) {
+      setDiagramExplanationError("Please create and save a diagram first.");
+      return;
+    }
+
+    setIsGeneratingExplanation(true);
+    setDiagramExplanationError("");
+
+    try {
+      await generateDiagramExplanation({
+        documentId: targetDocId,
+        diagramId: targetDiagramId,
+      });
+
+      await refreshDiagram(targetDocId);
+    } catch (error) {
+      console.error("[DocForm] Explanation generation failed:", error);
+      setDiagramExplanationError(`Failed to generate explanation: ${error.message}`);
+    } finally {
+      setIsGeneratingExplanation(false);
+    }
+  };
+
   const handleFinalSubmit = async () => {
     if (!docId || isLocked) return;
 
@@ -432,12 +476,7 @@ const DocForm = () => {
     const loadDiagram = async () => {
       setIsLoadingDiagram(true);
       try {
-        const response = await getDiagramByDocumentId(docId);
-        if (response?.data) {
-          setSavedDiagram(response.data);
-          setDiagramId(response.data._id);
-          setValue("designDiagram.diagramId", response.data._id);
-        }
+        await refreshDiagram(docId);
       } catch (error) {
         console.log("[DocForm] No diagram found for this document:", error.message);
       } finally {
@@ -446,7 +485,7 @@ const DocForm = () => {
     };
 
     loadDiagram();
-  }, [docId, setValue]);
+  }, [docId, refreshDiagram]);
 
   useEffect(() => {
     if (!docId) return;
@@ -476,6 +515,9 @@ const DocForm = () => {
     isLoadingDiagram,
     isLocked,
     onDiagramNavigation: handleDiagramNavigation,
+    onGenerateExplanation: handleGenerateExplanation,
+    isGeneratingExplanation,
+    diagramExplanationError,
     userStories,
     setUserStories,
     trackingList,

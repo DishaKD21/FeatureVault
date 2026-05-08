@@ -17,3 +17,8 @@ export const diagramIdSchema = z.object({
 export const documentIdSchema = z.object({
   documentId: z.string().min(1),
 });
+
+export const generateExplanationSchema = z.object({
+  documentId: z.string().min(1),
+  diagramId: z.string().min(1),
+});
