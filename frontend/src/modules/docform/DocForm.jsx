@@ -3,10 +3,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Download, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowRightCircle, ChevronDown, Download, LayoutGrid, Loader2, LogOut, Menu, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StepSidebar from "@/components/form/StepSidebar";
 import StepRenderer from "@/components/form/StepRenderer";
+import ThemeToggle from "@/components/theme/theme-toggle";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/modules/authentication/firebase";
+import { cn } from "@/lib/utils";
+import { getStoredUser, useAuth } from "@/components/auth/useAuth";
 import { generateDiagramExplanation, getDiagramByDocumentId } from "@/lib/diagramApi";
 import {
   createDraft,
@@ -18,14 +24,46 @@ import {
 } from "@/lib/documentationApi";
 
 const STEPS = [
-  { id: "requirement", title: "Requirement Elucidation" },
-  { id: "feature", title: "Feature Details" },
-  { id: "diagram", title: "Design Diagram" },
-  { id: "estimate", title: "Feature Estimate" },
-  { id: "tracking", title: "Tracking & Release" },
-  { id: "retrospective", title: "Retrospective" },
-  { id: "creator", title: "Who Created It" },
-  { id: "review", title: "Review & Submit" },
+  {
+    id: "requirement",
+    title: "Requirement Elucidation",
+    description: "Document discovery timing and the stakeholder discussion that shaped this feature.",
+  },
+  {
+    id: "feature",
+    title: "Feature Details",
+    description: "Name the capability and summarize how requirements translate into shipped work.",
+  },
+  {
+    id: "diagram",
+    title: "Design Diagram",
+    description: "Link the architecture visualization that describes important flows.",
+  },
+  {
+    id: "estimate",
+    title: "Feature Estimate",
+    description: "Lay out planned user stories before engineering execution begins.",
+  },
+  {
+    id: "tracking",
+    title: "Tracking & Release",
+    description: "Capture stories, pull requests, build evidence, and release channels.",
+  },
+  {
+    id: "retrospective",
+    title: "Retrospective",
+    description: "Record lessons learned plus follow-ups for the owning team.",
+  },
+  {
+    id: "creator",
+    title: "Who Created It",
+    description: "Identify the author responsible for assembling this artifact.",
+  },
+  {
+    id: "review",
+    title: "Review & Submit",
+    description: "Validate every captured section prior to finalized submission.",
+  },
 ];
 
 const STEP_FIELDS = {
@@ -95,6 +133,9 @@ const DocForm = () => {
   const [userStories, setUserStories] = useState([]);
   const [retrospective, setRetrospective] = useState([]);
   const [trackingList, setTrackingList] = useState([{ ...emptyTrackingItem }]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [userLabel, setUserLabel] = useState("");
+  const { logout } = useAuth();
 
   const isLocked = doc?.status === "completed";
   const isReviewStep = currentStep === STEPS.length - 1;
@@ -493,6 +534,18 @@ const DocForm = () => {
   }, [docId, currentStep, completedSteps]);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        const stored = getStoredUser();
+        setUserLabel(stored?.name || stored?.email?.split("@")[0] || "");
+        return;
+      }
+      setUserLabel(currentUser.displayName || currentUser.email?.split("@")[0] || "");
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (!docId || isLocked || !didHydrateRef.current) return;
 
     setAutoSaveStatus("");
@@ -529,12 +582,29 @@ const DocForm = () => {
     onEditStep: handleStepClick,
   };
 
+  const goDashboard = () => router.push("/dashboard");
+  const accountInitial =
+    userLabel
+      ?.split(" ")
+      .filter(Boolean)
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "•";
+
+  const sidebarProps = {
+    steps: STEPS,
+    currentStep,
+    completedSteps,
+    onStepClick: handleStepClick,
+  };
+
   if (isCreatingDraft) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-gray-800" />
-          <p className="text-gray-500">Creating document draft...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Creating document draft...</p>
         </div>
       </div>
     );
@@ -542,11 +612,11 @@ const DocForm = () => {
 
   if (isLocked) {
     return (
-      <div className="min-h-screen bg-gray-100 px-6 py-10">
-        <div className="mx-auto max-w-3xl rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <p className="text-sm font-medium uppercase tracking-wide text-gray-500">Completed document</p>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-950">{doc?.feature?.featureName || "Untitled Document"}</h1>
-          <p className="mt-3 text-gray-600">This document is locked because it has already been completed.</p>
+      <div className="min-h-screen bg-background px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-8 shadow-fv-panel">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Completed document</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{doc?.feature?.featureName || "Untitled Document"}</h1>
+          <p className="mt-3 text-muted-foreground">This document is locked because it has already been completed.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button type="button" onClick={handleDownload} className="gap-2">
               <Download className="h-4 w-4" />
@@ -563,55 +633,143 @@ const DocForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFinalSubmit)} className="min-h-screen bg-gray-100">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[300px_1fr]">
-        <StepSidebar
-          steps={STEPS}
-          currentStep={currentStep}
-          completedSteps={completedSteps}
-          onStepClick={handleStepClick}
-        />
+    <form onSubmit={handleSubmit(handleFinalSubmit)} className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/70 shadow-fv-soft backdrop-blur-[var(--fv-header-blur)] supports-[backdrop-filter]:bg-background/55">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 py-3 sm:px-6">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-accent lg:hidden"
+            aria-label="Open progress"
+            onClick={() => setMobileSidebarOpen(true)}
+          >
+            <Menu className="size-5" />
+          </button>
 
-        <main className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-6 py-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-700">
-                  Step {currentStep + 1} of {STEPS.length}
-                </p>
-                <h1 className="text-2xl font-semibold text-gray-950">{STEPS[currentStep].title}</h1>
+          <Button type="button" variant="ghost" size="sm" className="gap-2 px-2 text-muted-foreground hover:text-foreground" onClick={goDashboard}>
+            <ArrowLeft className="size-4" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex max-w-[14rem] items-center gap-2 rounded-full border border-border bg-card/80 py-1 pl-1 pr-2.5 text-left text-sm shadow-fv-soft transition hover:border-primary/35 hover:bg-accent/60"
+                >
+                  <span className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/90 to-primary text-[11px] font-semibold text-primary-foreground shadow-inner">
+                    {accountInitial}
+                  </span>
+                  <span className="hidden min-w-0 flex-1 flex-col leading-tight sm:flex">
+                    <span className="truncate font-medium text-foreground">{userLabel || "Account"}</span>
+                    <span className="text-[11px] text-muted-foreground">Workspace</span>
+                  </span>
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-2">
+                <div className="flex flex-col gap-1">
+                  <Button type="button" variant="ghost" className="justify-start gap-2" onClick={goDashboard}>
+                    <LayoutGrid className="size-4" />
+                    Dashboard
+                  </Button>
+                  <Button type="button" variant="ghost" className="justify-start gap-2 text-destructive hover:bg-destructive/10" onClick={logout}>
+                    <LogOut className="size-4" />
+                    Log out
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </header>
+
+      <div
+        className={cn(
+          "fixed inset-0 z-[60] bg-background/70 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
+          mobileSidebarOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+        )}
+        aria-hidden={!mobileSidebarOpen}
+        onClick={() => setMobileSidebarOpen(false)}
+      />
+
+      <div className="relative mx-auto grid max-w-[1280px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[296px_minmax(0,1fr)] lg:gap-8 lg:py-10">
+        <div
+          className={cn(
+            "fv-scrollbar fixed left-0 top-0 z-[70] h-full max-w-[min(22rem,calc(100vw-2.5rem))] overflow-y-auto border-r border-border bg-background p-4 shadow-fv-panel transition-transform duration-300 ease-out lg:hidden",
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <div className="flex items-center justify-end pb-2">
+            <button
+              type="button"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-accent"
+              onClick={() => setMobileSidebarOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+          <StepSidebar {...sidebarProps} onRequestClose={() => setMobileSidebarOpen(false)} />
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-[5.5rem]">
+            <StepSidebar {...sidebarProps} />
+          </div>
+        </aside>
+
+        <main className="relative min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-fv-panel dark:border-white/10">
+          <div className="border-b border-border bg-fv-form-step-header px-5 py-6 sm:px-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Step {currentStep + 1} of {STEPS.length}</p>
+                <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground sm:text-[1.75rem]">{STEPS[currentStep].title}</h1>
+                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{STEPS[currentStep].description}</p>
               </div>
-              <div className="min-h-5 text-sm text-gray-500">{autoSaveStatus}</div>
+              <div className="min-h-5 text-xs font-medium text-muted-foreground sm:text-right sm:text-sm">{autoSaveStatus}</div>
             </div>
           </div>
 
-          <div className="px-6 py-6 transition-opacity duration-200">
+          <div className="px-5 py-6 transition-opacity duration-300 sm:px-8 sm:py-8">
             <StepRenderer currentStep={currentStep} formProps={formProps} stepProps={stepProps} />
-            {formError && <p className="mt-5 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p>}
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 border-t border-gray-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={currentStep === 0 || isSaving || isSubmitting}
-              onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
-            >
-              Back
-            </Button>
-
-            {isReviewStep ? (
-              <Button type="submit" disabled={isSubmitting || isSaving} className="gap-2">
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Submit Document
-              </Button>
-            ) : (
-              <Button type="button" disabled={isSaving || isSubmitting} onClick={handleSaveAndContinue} className="gap-2">
-                {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                Save & Continue
-              </Button>
+            {formError && (
+              <p className="mt-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/15">
+                {formError}
+              </p>
             )}
           </div>
+
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-fv-panel backdrop-blur-md lg:pointer-events-auto lg:static lg:z-0 lg:border-t-0 lg:bg-transparent lg:p-0 lg:pb-0 lg:shadow-none">
+            <div className="pointer-events-auto mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-border/80 bg-transparent px-0 pt-4 sm:flex-row sm:items-center sm:justify-between lg:rounded-b-2xl lg:border-border/80 lg:bg-muted/15 lg:px-8 lg:py-7 dark:lg:bg-card/20">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={currentStep === 0 || isSaving || isSubmitting}
+                onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
+                className="w-full border-border/80 bg-background/80 transition hover:border-primary/45 hover:bg-accent/60 sm:w-auto"
+              >
+                <ArrowLeft className="mr-2 size-4" />
+                Back
+              </Button>
+
+              {isReviewStep ? (
+                <Button type="submit" disabled={isSubmitting || isSaving} className="w-full gap-2 shadow-fv-soft sm:w-auto">
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Submit Document
+                  <ArrowRightCircle className="size-4 opacity-90" />
+                </Button>
+              ) : (
+                <Button type="button" disabled={isSaving || isSubmitting} onClick={handleSaveAndContinue} className="w-full gap-2 shadow-fv-soft sm:w-auto">
+                  {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Save & Continue
+                  <ArrowRight className="size-4 opacity-90" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="h-24 shrink-0 lg:hidden" aria-hidden />
         </main>
       </div>
     </form>

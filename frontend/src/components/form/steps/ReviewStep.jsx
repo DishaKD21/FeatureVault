@@ -65,25 +65,22 @@ export default function ReviewStep({ values, userStories, trackingList, retrospe
   ];
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-950">Review & Submit</h2>
-        <p className="mt-1 text-sm text-gray-500">Review every section before creating the completed document.</p>
-      </div>
-
+    <section className="space-y-5">
       <div className="grid gap-4">
         {cards.map((card) => (
-          <div key={card.title} className="rounded-lg border border-gray-200 bg-white p-4">
+          <div key={card.title} className="rounded-2xl border border-border/80 bg-card/85 p-5 shadow-inner transition-colors hover:border-primary/25 dark:border-white/10 dark:bg-card/40">
             <div className="flex items-start justify-between gap-4">
-              <h3 className="font-semibold text-gray-950">{card.title}</h3>
-              <Button type="button" variant="ghost" size="sm" onClick={() => onEditStep(card.step)} className="gap-2">
+              <h3 className="font-semibold tracking-tight text-foreground">{card.title}</h3>
+              <Button type="button" variant="ghost" size="sm" onClick={() => onEditStep(card.step)} className="gap-2 rounded-xl text-primary hover:text-primary">
                 <Edit3 className="h-4 w-4" />
                 Edit
               </Button>
             </div>
-            <div className="mt-3 space-y-1 text-sm text-gray-600">
+            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
               {card.lines.map((line, index) => (
-                <p key={index} className="line-clamp-2">{line}</p>
+                <p key={index} className="line-clamp-2">
+                  {line}
+                </p>
               ))}
             </div>
           </div>

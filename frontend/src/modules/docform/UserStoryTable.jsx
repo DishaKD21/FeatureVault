@@ -7,6 +7,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
+import { Plus, Table2, ArrowDown, ArrowRight } from "lucide-react";
 
 /**
  * Helper to convert JSON array of objects back to HTML table for Tiptap
@@ -15,21 +16,21 @@ const jsonToHtmlTable = (data) => {
   if (!data || !Array.isArray(data) || data.length === 0) return "";
 
   const headers = Object.keys(data[0]);
-  
+
   let html = "<table><thead><tr>";
-  headers.forEach(h => {
+  headers.forEach((h) => {
     html += `<th>${h}</th>`;
   });
   html += "</tr></thead><tbody>";
-  
-  data.forEach(row => {
+
+  data.forEach((row) => {
     html += "<tr>";
-    headers.forEach(h => {
+    headers.forEach((h) => {
       html += `<td>${row[h] || ""}</td>`;
     });
     html += "</tr>";
   });
-  
+
   html += "</tbody></table>";
   return html;
 };
@@ -42,13 +43,8 @@ export default function EditableTable({ value, onChange }) {
   const editor = useEditor({
     editorProps: {
       handleKeyDown(view, event) {
-        if (event.key === "Enter") {
-          return true;
-        }
-
         if (event.key === "Backspace") {
-          const selectedCells =
-            wrapRef.current?.querySelectorAll(".selectedCell") ?? [];
+          const selectedCells = wrapRef.current?.querySelectorAll(".selectedCell") ?? [];
 
           if (selectedCells.length > 0) {
             event.preventDefault();
@@ -91,7 +87,7 @@ export default function EditableTable({ value, onChange }) {
       TableCell,
       TableHeader,
     ],
-    content:"",
+    content: "",
   });
 
   const getTableSize = () => {
@@ -103,6 +99,7 @@ export default function EditableTable({ value, onChange }) {
 
     return { rows, cols };
   };
+
   useEffect(() => {
     if (!editor) return;
 
@@ -119,6 +116,7 @@ export default function EditableTable({ value, onChange }) {
       editor.off("update", update);
     };
   }, [editor]);
+
   const handleContextMenu = useCallback(
     (e) => {
       if (!editor) return;
@@ -126,8 +124,7 @@ export default function EditableTable({ value, onChange }) {
       if (!cell) return;
       e.preventDefault();
 
-      const selectedCells =
-        wrapRef.current?.querySelectorAll(".selectedCell") ?? [];
+      const selectedCells = wrapRef.current?.querySelectorAll(".selectedCell") ?? [];
       let type = null;
 
       if (selectedCells.length > 0) {
@@ -155,14 +152,11 @@ export default function EditableTable({ value, onChange }) {
     return () => window.removeEventListener("click", close);
   }, []);
 
-  // HYDRATION: Sync editor content with value prop
   const isFirstLoad = useRef(true);
   useEffect(() => {
     if (!editor || !value) return;
-    
-    // Only hydrate if we haven't loaded yet or if external data changed significantly
+
     if (isFirstLoad.current && value.length > 0) {
-      console.log("[UserStoryTable] Hydrating table content...");
       const html = jsonToHtmlTable(value);
       editor.commands.setContent(html);
       isFirstLoad.current = false;
@@ -177,12 +171,8 @@ export default function EditableTable({ value, onChange }) {
 
     if (rows.length === 0) return [];
 
-    // HEADER
-    const headers = Array.from(rows[0].children).map(
-      (cell) => cell.innerText.trim() || `col${Math.random()}`,
-    );
+    const headers = Array.from(rows[0].children).map((cell) => cell.innerText.trim() || `col${Math.random()}`);
 
-    // DATA ROWS
     const dataRows = rows.slice(1);
 
     return dataRows
@@ -218,56 +208,66 @@ export default function EditableTable({ value, onChange }) {
     return () => {
       editor.off("update", update);
     };
-  }, [editor]);
-   if (!editor) return null;
+  }, [editor, onChange]);
+
+  if (!editor) return null;
+
   return (
     <div className="nt-root">
       <div className="nt-page">
-       {!tableCreated && (
-  <button
-    type="button"
-    className="nt-create-table"
-    onClick={() => {
-      editor
-        ?.chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run();
-
-      setTableCreated(true);
-    }}
-  >
-    Create Table
-  </button>
-)}
+        {!tableCreated && (
+          <button
+            type="button"
+            className="nt-create-table"
+            onClick={() => {
+              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+              setTableCreated(true);
+            }}
+          >
+            <Table2 className="size-4 shrink-0 opacity-80" aria-hidden />
+            Create table
+          </button>
+        )}
 
         {tableCreated && (
-  <div
-    className="nt-table-wrap"
-    ref={wrapRef}
-    onContextMenu={handleContextMenu}
-  >
-    <div className="nt-editor">
-      <EditorContent editor={editor} />
-    </div>
+          <div className="nt-toolbar">
+            <button
+              type="button"
+              className="nt-toolbar-btn"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              title="Add row below"
+            >
+              <ArrowDown className="size-3.5 opacity-90" aria-hidden />
+              Row
+            </button>
+            <button
+              type="button"
+              className="nt-toolbar-btn"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              title="Add column right"
+            >
+              <ArrowRight className="size-3.5 opacity-90" aria-hidden />
+              Column
+            </button>
+          </div>
+        )}
 
-    <button
-      type="button"
-      className="nt-add-row"
-      onClick={() => editor.chain().focus().addRowAfter().run()}
-    >
-      + Row
-    </button>
+        {tableCreated && (
+          <div className="nt-table-wrap" ref={wrapRef} onContextMenu={handleContextMenu}>
+            <div className="nt-editor">
+              <EditorContent editor={editor} />
+            </div>
 
-    <button
-      type="button"
-      className="nt-add-col"
-      onClick={() => editor.chain().focus().addColumnAfter().run()}
-    >
-      + Col
-    </button>
-  </div>
-)}
+            <button type="button" className="nt-add-row" onClick={() => editor.chain().focus().addRowAfter().run()}>
+              <Plus className="size-3.5 opacity-80" aria-hidden />
+              Add row
+            </button>
+
+            <button type="button" className="nt-add-col" onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column">
+              <Plus className="size-4" aria-hidden />
+            </button>
+          </div>
+        )}
       </div>
       {contextMenu && (
         <div

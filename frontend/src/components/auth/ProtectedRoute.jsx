@@ -19,10 +19,10 @@ export default function ProtectedRoute({ children }) {
 
   if (!authed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-gray-800" />
-          <p className="text-gray-500">Checking access...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Checking access...</p>
         </div>
       </div>
     );

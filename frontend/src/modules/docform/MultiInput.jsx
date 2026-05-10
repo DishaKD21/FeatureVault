@@ -1,41 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const normalizeIncoming = (v) => {
+  if (!Array.isArray(v) || v.length === 0) return [""];
+  return v.map((x) => (x == null ? "" : String(x)));
+};
 
 const MultiInput = ({ label, value, onChange }) => {
-  const [values, setValues] = useState(value || [""]);
+  const [values, setValues] = useState(() => normalizeIncoming(value));
 
-  // Sync internal state if prop changes (hydration)
   useEffect(() => {
-    if (value && JSON.stringify(value) !== JSON.stringify(values)) {
-      setValues(value);
-    }
+    if (value === undefined) return;
+    const next = normalizeIncoming(value);
+    setValues((prev) => (JSON.stringify(next) !== JSON.stringify(prev) ? next : prev));
   }, [value]);
 
-  const addField = () => {
-    const updated = [...values, ""];
-    setValues(updated);
-    onChange?.(updated);
-  };
+  const addField = useCallback(() => {
+    setValues((prev) => {
+      const updated = [...prev, ""];
+      onChange?.(updated);
+      return updated;
+    });
+  }, [onChange]);
 
-  const removeField = (index) => {
-    const updated = values.filter((_, i) => i !== index);
-    setValues(updated);
-    onChange?.(updated);
-  };
+  const removeField = useCallback(
+    (index) => {
+      setValues((prev) => {
+        if (prev.length <= 1) return prev;
+        const updated = prev.filter((_, i) => i !== index);
+        onChange?.(updated);
+        return updated;
+      });
+    },
+    [onChange],
+  );
 
-  const handleChange = (index, val) => {
-    const updated = [...values];
-    updated[index] = val;
-    setValues(updated);
-    onChange?.(updated);
-  };
+  const handleChange = useCallback(
+    (index, val) => {
+      setValues((prev) => {
+        const updated = [...prev];
+        updated[index] = val;
+        onChange?.(updated);
+        return updated;
+      });
+    },
+    [onChange],
+  );
 
   return (
     <div className="space-y-2">
-      <p className="font-medium">{label}</p>
+      <p className="font-medium text-foreground">{label}</p>
 
       {values.map((val, i) => (
         <div key={i} className="flex gap-2">
@@ -43,22 +62,29 @@ const MultiInput = ({ label, value, onChange }) => {
             value={val}
             onChange={(e) => handleChange(i, e.target.value)}
             placeholder="Enter link..."
+            className="min-h-9 flex-1 text-foreground"
           />
 
-          {values.length > 1 && (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => removeField(i)}
-            >
-              ✕
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className={cn(
+              "shrink-0 border-border text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive",
+              values.length <= 1 && "pointer-events-none opacity-30",
+            )}
+            disabled={values.length <= 1}
+            title={values.length <= 1 ? "At least one field is required" : "Remove this row"}
+            aria-label={values.length <= 1 ? "Cannot remove the only field" : "Remove this link row"}
+            onClick={() => removeField(i)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       ))}
 
-      <Button type="button" variant="secondary" onClick={addField}>
-        + Add
+      <Button type="button" variant="secondary" onClick={addField} className="text-foreground">
+        + Add another
       </Button>
     </div>
   );

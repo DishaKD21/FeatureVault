@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import logo from "../../../public/logo-dark.png";
+import ThemeLogo from "@/components/branding/ThemeLogo";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../modules/authentication/firebase";
 import { isAuthenticated, saveRedirectPath, syncFirebaseUser, useAuth } from "@/components/auth/useAuth";
+import ThemeToggle from "@/components/theme/theme-toggle";
 
 const Navbar = () => {
   const router = useRouter();
@@ -46,57 +46,54 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="flex items-center justify-between border-b bg-white px-6 py-3 shadow-sm">
-      <div className="flex cursor-pointer items-center gap-2 text-lg font-semibold">
-        <Link href="/">
-          <Image src={logo} height={40} width={160} alt="FeatureVault logo" className="h-10 w-auto object-contain" priority />
-        </Link>
-      </div>
+    <nav className="flex items-center justify-between border-b border-border bg-background/80 px-6 py-3 shadow-fv-soft backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+      <ThemeLogo priority />
 
-      <div className="flex items-center gap-6 text-gray-700">
-        <Link href="/" className="hover:text-black">
+      <div className="flex items-center gap-6 text-muted-foreground">
+        <Link href="/" className="transition hover:text-foreground">
           Home
         </Link>
-        <Link href="/#features" className="hover:text-black">
+        <Link href="/#features" className="transition hover:text-foreground">
           Features
         </Link>
         <button
           type="button"
           disabled={redirectingTo === "/diagram-editor"}
           onClick={() => goProtected("/diagram-editor")}
-          className="hover:text-black disabled:cursor-wait disabled:text-gray-400"
+          className="transition hover:text-foreground disabled:cursor-wait disabled:opacity-50"
         >
           Diagram Tool
         </button>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <ThemeToggle />
         {checkingAuth ? (
-          <span className="text-sm text-gray-500">Checking...</span>
+          <span className="text-sm text-muted-foreground">Checking...</span>
         ) : !authenticated ? (
           <>
-            <Link href="/login" className="rounded-md px-4 py-1 hover:bg-gray-100">
+            <Link href="/login" className="rounded-lg px-4 py-1.5 transition hover:bg-accent">
               Login
             </Link>
-            <Link href="/register" className="rounded-md border px-4 py-1 hover:bg-gray-100">
+            <Link href="/register" className="rounded-lg border border-border px-4 py-1.5 transition hover:bg-accent">
               Signup
             </Link>
           </>
         ) : (
           <>
-            {userLabel && <span className="text-sm text-gray-500">{userLabel}</span>}
+            {userLabel && <span className="hidden text-sm text-muted-foreground sm:inline">{userLabel}</span>}
             <button
               type="button"
               disabled={redirectingTo === "/dashboard"}
               onClick={() => goProtected("/dashboard")}
-              className="font-medium text-blue-600 hover:text-black disabled:cursor-wait disabled:text-gray-400"
+              className="font-medium text-primary transition hover:text-foreground disabled:cursor-wait disabled:opacity-50"
             >
               Dashboard
             </button>
             <button
               type="button"
               onClick={logout}
-              className="rounded-md border border-red-200 px-3 py-1 text-sm text-red-500 transition-colors hover:bg-red-50"
+              className="rounded-lg border border-destructive/25 px-3 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
             >
               Logout
             </button>

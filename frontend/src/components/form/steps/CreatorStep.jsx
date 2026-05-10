@@ -1,28 +1,30 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 export default function CreatorStep({ register, disabled = false }) {
   return (
-    <section className="space-y-6">
+    <section className="grid gap-7 sm:grid-cols-3">
       <div>
-        <h2 className="text-xl font-semibold text-gray-950">Who Created It</h2>
-        <p className="mt-1 text-sm text-gray-500">Record the document owner and total feature time.</p>
+        <Label className="text-foreground">Name</Label>
+        <Input
+          className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
+          disabled={disabled}
+          {...register("whoCreatedIt.name", { required: "Creator name is required" })}
+        />
       </div>
-
-      <div className="grid gap-5 sm:grid-cols-3">
-        <div>
-          <label className="font-medium">Name</label>
-          <Input className="mt-2" disabled={disabled} {...register("whoCreatedIt.name", { required: "Creator name is required" })} />
-        </div>
-        <div>
-          <label className="font-medium">Emp ID</label>
-          <Input className="mt-2" disabled={disabled} {...register("whoCreatedIt.empId", { required: "Employee ID is required" })} />
-        </div>
-        <div>
-          <label className="font-medium">Total Time</label>
-          <Input type="number" className="mt-2" disabled={disabled} {...register("whoCreatedIt.totalTime", { min: 0 })} />
-        </div>
+      <div>
+        <Label className="text-foreground">Emp ID</Label>
+        <Input
+          className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
+          disabled={disabled}
+          {...register("whoCreatedIt.empId", { required: "Employee ID is required" })}
+        />
+      </div>
+      <div>
+        <Label className="text-foreground">Total Time</Label>
+        <Input type="number" className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35" disabled={disabled} {...register("whoCreatedIt.totalTime", { min: 0 })} />
       </div>
     </section>
   );

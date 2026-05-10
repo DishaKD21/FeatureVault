@@ -1,0 +1,99 @@
+/* FeatureVault design system — gradients, elevations, rhythm, theme transitions */
+
+:root {
+  /* Accent glow — teal, aligned with --primary in globals */
+  --fv-primary-strong: oklch(0.44 0.13 175);
+  --fv-glow-primary: oklch(0.55 0.14 175 / 0.32);
+
+  /* Surfaces */
+  --fv-panel-light: linear-gradient(
+    145deg,
+    oklch(0.995 0.002 264) 0%,
+    oklch(0.992 0.006 175) 100%
+  );
+  --fv-panel-dark: linear-gradient(
+    155deg,
+    oklch(0.24 0.006 264) 0%,
+    oklch(0.21 0.005 264) 100%
+  );
+
+  --fv-sidebar-muted: oklch(0.965 0.006 264);
+  --fv-header-blur: 16px;
+
+  --fv-transition-theme: background-color 0.35s ease, color 0.25s ease, border-color 0.35s ease,
+    box-shadow 0.35s ease;
+  --fv-transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --fv-radius-sidebar: calc(var(--radius) + 4px);
+
+  --fv-shadow-soft: 0 1px 2px oklch(0 0 0 / 0.04),
+    0 8px 32px oklch(0 0 0 / 0.06);
+  --fv-shadow-panel: 0 1px 2px oklch(0 0 0 / 0.05),
+    0 22px 50px oklch(0 0 0 / 0.08);
+}
+
+.dark {
+  --fv-primary-strong: oklch(0.72 0.11 175);
+  --fv-glow-primary: oklch(0.65 0.12 175 / 0.22);
+  --fv-sidebar-muted: oklch(0.255 0.006 264);
+  --fv-shadow-soft: 0 1px 2px oklch(0 0 0 / 0.35),
+    0 14px 40px oklch(0 0 0 / 0.5);
+  --fv-shadow-panel: 0 1px 0 oklch(1 0 0 / 0.06),
+    0 28px 64px oklch(0 0 0 / 0.55);
+}
+
+html {
+  color-scheme: light;
+  transition: var(--fv-transition-theme);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  transition: var(--fv-transition-theme);
+}
+
+/* Subtle scrollbar for cinematic panels */
+.fv-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0 0 0 / 0.15) transparent;
+}
+
+.dark .fv-scrollbar {
+  scrollbar-color: oklch(1 0 0 / 0.16) transparent;
+}
+
+@layer utilities {
+  .shadow-fv-soft {
+    box-shadow: var(--fv-shadow-soft);
+  }
+
+  .shadow-fv-panel {
+    box-shadow: var(--fv-shadow-panel);
+  }
+
+  .bg-fv-panel-light {
+    background-image: var(--fv-panel-light);
+  }
+
+  .dark .bg-fv-panel-dark {
+    background-image: var(--fv-panel-dark);
+  }
+
+  .bg-fv-sidebar-surface {
+    background-color: var(--fv-sidebar-muted);
+  }
+
+  /* Step form hero: one class so light + dark backgrounds always pair with theme text tokens */
+  .bg-fv-form-step-header {
+    background-color: color-mix(in oklch, var(--muted) 55%, var(--background));
+    background-image: var(--fv-panel-light);
+  }
+
+  .dark .bg-fv-form-step-header {
+    background-color: var(--card);
+    background-image: var(--fv-panel-dark);
+  }
+}

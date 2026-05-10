@@ -8,27 +8,22 @@ import MultiInput from "@/modules/docform/MultiInput";
 export default function TrackingStep({ trackingList, addTracking, handleTrackingChange, disabled = false }) {
   return (
     <section className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-950">Tracking & Release</h2>
-        <p className="mt-1 text-sm text-gray-500">Attach story, PR, build, and deployment evidence.</p>
-      </div>
-
       {trackingList.map((item, index) => (
-        <div key={index} className="space-y-4 rounded-lg border border-gray-200 p-4">
+        <div key={index} className="space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-5 dark:border-white/10 dark:bg-card/25">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="font-medium">User Story Number</label>
+              <label className="font-medium text-foreground">User Story Number</label>
               <Input
-                className="mt-2"
+                className="mt-2 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
                 disabled={disabled}
                 value={item.userStoryNumber}
                 onChange={(e) => handleTrackingChange(index, "userStoryNumber", e.target.value)}
               />
             </div>
             <div>
-              <label className="font-medium">User Story Link</label>
+              <label className="font-medium text-foreground">User Story Link</label>
               <Input
-                className="mt-2"
+                className="mt-2 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
                 disabled={disabled}
                 value={item.userStoryLink}
                 onChange={(e) => handleTrackingChange(index, "userStoryLink", e.target.value)}
@@ -39,9 +34,9 @@ export default function TrackingStep({ trackingList, addTracking, handleTracking
           <MultiInput label="PR Links" value={item.prLinks} onChange={(val) => handleTrackingChange(index, "prLinks", val)} />
 
           <div>
-            <label className="font-medium">Code Description</label>
+            <label className="font-medium text-foreground">Code Description</label>
             <textarea
-              className="mt-2 min-h-28 w-full rounded-lg border p-3"
+              className="mt-2 min-h-28 w-full resize-y rounded-xl border border-border/80 bg-background/55 p-3 text-foreground shadow-inner outline-none transition-colors focus-visible:border-primary/50 dark:bg-card/35"
               disabled={disabled}
               value={item.codeDescription}
               onChange={(e) => handleTrackingChange(index, "codeDescription", e.target.value)}
@@ -53,7 +48,7 @@ export default function TrackingStep({ trackingList, addTracking, handleTracking
         </div>
       ))}
 
-      <Button type="button" variant="outline" onClick={addTracking} disabled={disabled} className="gap-2">
+      <Button type="button" variant="outline" onClick={addTracking} disabled={disabled} className="gap-2 rounded-xl border-border/80 hover:border-primary/35">
         <Plus className="h-4 w-4" />
         Add Another User Story
       </Button>

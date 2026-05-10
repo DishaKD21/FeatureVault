@@ -1,8 +1,7 @@
 "use client";
-import  Link  from "next/link";
+import Link from "next/link";
 import React, { useState } from "react";
-import logo from "../../../public/logo-dark.png"
-import Image from "next/image";
+import ThemeLogo from "@/components/branding/ThemeLogo";
 import { useRouter } from "next/navigation";
 import { isAuthenticated, saveRedirectPath } from "@/components/auth/useAuth";
 
@@ -23,16 +22,16 @@ const Footer = () => {
   };
 
   return (
-    <div className="w-full flex justify-center items-center bg-white py-10">
-      <div className="w-[90%] max-w-6xl border border-black rounded-2xl p-8">
+    <div className="flex w-full items-center justify-center bg-background py-10">
+      <div className="w-[90%] max-w-6xl rounded-2xl border border-border bg-card p-8 shadow-fv-soft">
          
         {/* Top Section */}
         <div className="flex flex-col md:flex-row justify-between text-center md:text-left gap-8">
           
           {/* Left */}
           <div className="flex-1">
-           <Image src={logo} alt="FeatureVault logo" width={150} height={40} className="h-auto w-auto" />
-            <p className="text-gray-700">
+           <ThemeLogo className="mb-2" imgClassName="h-9" />
+            <p className="text-muted-foreground">
               Create structured feature documentation and system diagrams
               quickly and efficiently.
             </p>
@@ -40,16 +39,18 @@ const Footer = () => {
 
           {/* Middle */}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold mb-3 border-b border-black inline-block">
+            <h3 className="mb-3 inline-block border-b border-border text-lg font-semibold text-foreground">
               Quick Links
             </h3>
-            <ul className="mt-2 space-y-1 text-gray-700 flex flex-col">
-              <Link href="#features">Features</Link >
+            <ul className="mt-2 flex flex-col space-y-1 text-muted-foreground">
+              <Link href="#features" className="transition hover:text-foreground">
+                Features
+              </Link>
               <button
                 type="button"
                 disabled={redirectingTo === "/create-doc"}
                 onClick={() => goProtected("/create-doc")}
-                className="text-left disabled:cursor-wait disabled:text-gray-400"
+                className="text-left transition hover:text-foreground disabled:cursor-wait disabled:opacity-50"
               >
                 Create Documentation
               </button>
@@ -57,27 +58,29 @@ const Footer = () => {
                 type="button"
                 disabled={redirectingTo === "/diagram-editor"}
                 onClick={() => goProtected("/diagram-editor")}
-                className="text-left disabled:cursor-wait disabled:text-gray-400"
+                className="text-left transition hover:text-foreground disabled:cursor-wait disabled:opacity-50"
               >
                 Diagram Tool
               </button>
-              <Link href="/feedback">Feedback</Link >
+              <Link href="/feedback" className="transition hover:text-foreground">
+                Feedback
+              </Link>
             </ul>
           </div>
 
           {/* Right */}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold mb-3 border-b border-black inline-block">
+            <h3 className="mb-3 inline-block border-b border-border text-lg font-semibold text-foreground">
               Contact Us
             </h3>
-            <p className="text-gray-700">+91-908122243091</p>
-            <p className="text-gray-700">support@featurevault.com</p>
+            <p className="text-muted-foreground">+91-908122243091</p>
+            <p className="text-muted-foreground">support@featurevault.com</p>
           </div>
 
         </div>
 
         {/* Divider */}
-        <div className="border-t border-black mt-8 pt-4 text-center text-gray-700">
+        <div className="mt-8 border-t border-border pt-4 text-center text-muted-foreground">
           ©2026 FeatureVault. All Rights Reserved.
         </div>
 
