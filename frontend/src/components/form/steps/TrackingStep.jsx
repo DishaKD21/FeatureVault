@@ -1,15 +1,28 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MultiInput from "@/modules/docform/MultiInput";
 
-export default function TrackingStep({ trackingList, addTracking, handleTrackingChange, disabled = false }) {
+export default function TrackingStep({ trackingList, addTracking, removeTracking, handleTrackingChange, disabled = false }) {
   return (
     <section className="space-y-6">
       {trackingList.map((item, index) => (
-        <div key={index} className="space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-5 dark:border-white/10 dark:bg-card/25">
+        <div key={index} className="relative space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-5 dark:border-white/10 dark:bg-card/25">
+          <div className="absolute right-4 top-4">
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={() => removeTracking?.(index)}
+              disabled={disabled || trackingList.length <= 1}
+              title={trackingList.length <= 1 ? "At least one user story required" : "Remove this user story"}
+              className="opacity-90"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="font-medium text-foreground">User Story Number</label>

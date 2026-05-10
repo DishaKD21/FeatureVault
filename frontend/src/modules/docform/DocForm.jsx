@@ -349,6 +349,14 @@ const DocForm = () => {
     setTrackingList((prev) => [...prev, { ...emptyTrackingItem }]);
   };
 
+  const removeTracking = (index) => {
+    setTrackingList((prev) => {
+      if (prev.length <= 1) return prev;
+      const updated = prev.filter((_, i) => i !== index);
+      return updated.length ? updated : [{ ...emptyTrackingItem }];
+    });
+  };
+
   const handleTrackingChange = (index, field, value) => {
     setTrackingList((prev) => {
       const updated = [...prev];
@@ -575,6 +583,7 @@ const DocForm = () => {
     setUserStories,
     trackingList,
     addTracking,
+    removeTracking,
     handleTrackingChange,
     retrospective,
     setRetrospective,

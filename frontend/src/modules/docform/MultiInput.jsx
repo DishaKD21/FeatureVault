@@ -20,37 +20,35 @@ const MultiInput = ({ label, value, onChange }) => {
     setValues((prev) => (JSON.stringify(next) !== JSON.stringify(prev) ? next : prev));
   }, [value]);
 
+  // Keep parent in sync when `values` changes, but do it in an effect
+  // to avoid updating parent state while rendering this component.
+  useEffect(() => {
+    onChange?.(values);
+    // Intentionally only runs when `values` change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
+
   const addField = useCallback(() => {
-    setValues((prev) => {
-      const updated = [...prev, ""];
-      onChange?.(updated);
-      return updated;
-    });
-  }, [onChange]);
+    setValues((prev) => [...prev, ""]);
+  }, []);
 
   const removeField = useCallback(
     (index) => {
       setValues((prev) => {
         if (prev.length <= 1) return prev;
-        const updated = prev.filter((_, i) => i !== index);
-        onChange?.(updated);
-        return updated;
+        return prev.filter((_, i) => i !== index);
       });
     },
-    [onChange],
+    [],
   );
 
-  const handleChange = useCallback(
-    (index, val) => {
-      setValues((prev) => {
-        const updated = [...prev];
-        updated[index] = val;
-        onChange?.(updated);
-        return updated;
-      });
-    },
-    [onChange],
-  );
+  const handleChange = useCallback((index, val) => {
+    setValues((prev) => {
+      const updated = [...prev];
+      updated[index] = val;
+      return updated;
+    });
+  }, []);
 
   return (
     <div className="space-y-2">

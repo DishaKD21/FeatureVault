@@ -96,4 +96,41 @@ body {
     background-color: var(--card);
     background-image: var(--fv-panel-dark);
   }
+
+  /* Homepage marketing — uses same palette as doc form (primary + neutrals) */
+  .fv-home-hero-wrap {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .fv-home-hero-wrap::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -15%;
+    width: min(110%, 56rem);
+    height: min(52vh, 28rem);
+    transform: translateX(-50%);
+    background: radial-gradient(
+      ellipse 100% 75% at 50% 0%,
+      color-mix(in oklch, var(--primary), transparent 88%) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .fv-home-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Neutral gray only (no warm/teal mix) — homepage bottom CTA band */
+  .fv-home-section-muted {
+    background-color: oklch(0.965 0.003 264);
+  }
+
+  .dark .fv-home-section-muted {
+    background-color: oklch(0.255 0.004 264);
+  }
 }
