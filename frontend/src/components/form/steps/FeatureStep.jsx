@@ -22,7 +22,7 @@ export default function FeatureStep({ register, setValue, watch, disabled = fals
   return (
     <section className="space-y-8">
       <div>
-        <Label className="fv-doc-field-label text-foreground">Feature Name</Label>
+        <Label className="text-foreground">Feature Name</Label>
         <Input
           placeholder="Enter feature name"
           disabled={disabled}
@@ -31,11 +31,11 @@ export default function FeatureStep({ register, setValue, watch, disabled = fals
         />
       </div>
 
-      <div className="fv-doc-panel space-y-6 shadow-inner dark:border-white/10">
-        <h3 className="fv-doc-block-title text-base sm:text-lg">Feature Description</h3>
-        <div className="grid gap-6 sm:grid-cols-2">
+      <div className="rounded-2xl border border-border/80 bg-muted/30 p-6 shadow-inner dark:border-white/10 dark:bg-card/30">
+        <h3 className="text-sm font-semibold tracking-wide text-foreground">Feature Description</h3>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
           <div>
-            <Label className="fv-doc-field-label text-foreground">Start Time</Label>
+            <Label className="text-foreground">Start Time</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button type="button" variant="outline" disabled={disabled} className={dateTriggerClass}>
@@ -56,7 +56,7 @@ export default function FeatureStep({ register, setValue, watch, disabled = fals
           </div>
 
           <div>
-            <Label className="fv-doc-field-label text-foreground">End Time</Label>
+            <Label className="text-foreground">End Time</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button type="button" variant="outline" disabled={disabled} className={dateTriggerClass}>
@@ -78,7 +78,7 @@ export default function FeatureStep({ register, setValue, watch, disabled = fals
         </div>
 
         <div className="mt-6">
-          <Label className="fv-doc-field-label text-foreground">Requirement Analysis</Label>
+          <Label className="text-foreground">Requirement Analysis</Label>
           <Textarea
             placeholder="Code-level planning, classes, logic..."
             disabled={disabled}

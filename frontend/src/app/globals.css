@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "../styles/theme.css";
-@import "../styles/documentation.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -124,18 +123,6 @@
   * {
     @apply border-border outline-ring/50;
     }
-
-  /* Text selection — brand lime so highlights stay obvious in both themes */
-  ::selection {
-    background-color: color-mix(in oklch, #c4f042 55%, transparent);
-    color: oklch(0.16 0.02 264);
-  }
-
-  .dark ::selection {
-    background-color: color-mix(in oklch, #c4f042 45%, transparent);
-    color: oklch(0.12 0.02 264);
-  }
-
   body {
     @apply bg-background text-foreground;
     }

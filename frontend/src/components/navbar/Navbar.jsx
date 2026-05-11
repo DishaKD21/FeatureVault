@@ -11,10 +11,10 @@ import { isAuthenticated, saveRedirectPath, syncFirebaseUser, useAuth } from "@/
 import ThemeToggle from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
-const navLinkClass =
-  "rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-accent/80 hover:text-foreground";
+const desktopLink =
+  "shrink-0 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-accent/80 hover:text-foreground";
 
-const mobileNavLinkClass =
+const mobileItem =
   "block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-foreground transition hover:bg-accent/80";
 
 const Navbar = () => {
@@ -44,14 +44,14 @@ const Navbar = () => {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
@@ -82,31 +82,34 @@ const Navbar = () => {
           <ThemeLogo priority />
         </div>
 
-        {/* Desktop center links */}
+        {/* Desktop — center links */}
         <div className="hidden min-w-0 flex-1 items-center justify-center gap-2 md:flex md:gap-6">
-          <Link href="/" className={cn(navLinkClass, "shrink-0")}>
+          <Link href="/" className={desktopLink}>
             Home
           </Link>
-          <Link href="/#features" className={cn(navLinkClass, "shrink-0")}>
+          <Link href="/#features" className={desktopLink}>
             Features
           </Link>
           <button
             type="button"
             disabled={redirectingTo === "/diagram-editor"}
             onClick={() => goProtected("/diagram-editor")}
-            className={cn(navLinkClass, "shrink-0 disabled:cursor-wait disabled:opacity-50")}
+            className={cn(desktopLink, "disabled:cursor-wait disabled:opacity-50")}
           >
             Diagram Tool
           </button>
         </div>
 
-        {/* Desktop actions */}
-        <div className="hidden min-w-0 shrink-0 items-center gap-2 md:flex md:gap-3">
+        {/* Desktop — auth + theme */}
+        <div className="hidden min-w-0 shrink-0 items-center justify-end gap-2 md:flex md:gap-3">
           {checkingAuth ? (
-            <span className="text-sm text-muted-foreground">Checking…</span>
+            <span className="text-sm text-muted-foreground">Checking...</span>
           ) : !authenticated ? (
             <>
-              <Link href="/login" className={cn(navLinkClass, "hidden lg:inline-flex")}>
+              <Link
+                href="/login"
+                className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-accent/80 hover:text-foreground lg:inline-flex"
+              >
                 Login
               </Link>
               <Link
@@ -119,9 +122,7 @@ const Navbar = () => {
           ) : (
             <>
               {userLabel && (
-                <span className="hidden max-w-[7rem] truncate text-sm text-muted-foreground xl:inline xl:max-w-[10rem]">
-                  {userLabel}
-                </span>
+                <span className="hidden max-w-[7rem] truncate text-sm text-muted-foreground xl:inline xl:max-w-[10rem]">{userLabel}</span>
               )}
               <button
                 type="button"
@@ -143,8 +144,17 @@ const Navbar = () => {
           <ThemeToggle />
         </div>
 
-        {/* Mobile menu trigger */}
-        <div className="flex items-center md:hidden">
+        {/* Mobile — compact CTA + menu */}
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
+          {!authenticated && !checkingAuth ? (
+            <Link
+              href="/register"
+              onClick={closeMenu}
+              className="rounded-lg bg-primary px-2.5 py-2 text-xs font-medium text-primary-foreground shadow-fv-soft transition hover:bg-primary/90 sm:text-sm"
+            >
+              Get started
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -153,12 +163,11 @@ const Navbar = () => {
             aria-controls="fv-site-mobile-nav"
             aria-label="Open menu"
           >
-            <Menu className="size-5" aria-hidden />
+            <Menu className="size-5 shrink-0" aria-hidden />
           </button>
         </div>
       </nav>
 
-      {/* Mobile drawer */}
       {menuOpen ? (
         <>
           <div
@@ -183,17 +192,17 @@ const Navbar = () => {
               </button>
             </div>
 
-            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4 pb-8" aria-label="Mobile">
-              <Link href="/" className={mobileNavLinkClass} onClick={closeMenu}>
+            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4 pb-8" aria-label="Mobile navigation">
+              <Link href="/" className={mobileItem} onClick={closeMenu}>
                 Home
               </Link>
-              <Link href="/#features" className={mobileNavLinkClass} onClick={closeMenu}>
+              <Link href="/#features" className={mobileItem} onClick={closeMenu}>
                 Features
               </Link>
               <button
                 type="button"
                 disabled={redirectingTo === "/diagram-editor"}
-                className={cn(mobileNavLinkClass, "text-left disabled:opacity-50")}
+                className={cn(mobileItem, "text-left disabled:opacity-50")}
                 onClick={() => goProtectedFromMenu("/diagram-editor")}
               >
                 Diagram Tool
@@ -205,12 +214,12 @@ const Navbar = () => {
                 <p className="px-4 text-sm text-muted-foreground">Checking session…</p>
               ) : !authenticated ? (
                 <>
-                  <Link href="/login" className={mobileNavLinkClass} onClick={closeMenu}>
+                  <Link href="/login" className={mobileItem} onClick={closeMenu}>
                     Login
                   </Link>
                   <Link
                     href="/register"
-                    className={cn(mobileNavLinkClass, "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground")}
+                    className={cn(mobileItem, "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground")}
                     onClick={closeMenu}
                   >
                     Get started
@@ -224,14 +233,14 @@ const Navbar = () => {
                   <button
                     type="button"
                     disabled={redirectingTo === "/dashboard"}
-                    className={cn(mobileNavLinkClass, "text-left disabled:opacity-50")}
+                    className={cn(mobileItem, "text-left disabled:opacity-50")}
                     onClick={() => goProtectedFromMenu("/dashboard")}
                   >
                     Dashboard
                   </button>
                   <button
                     type="button"
-                    className={cn(mobileNavLinkClass, "text-left text-destructive hover:bg-destructive/10")}
+                    className={cn(mobileItem, "text-left text-destructive hover:bg-destructive/10")}
                     onClick={() => {
                       closeMenu();
                       logout();

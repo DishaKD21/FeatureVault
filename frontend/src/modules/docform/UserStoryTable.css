@@ -141,27 +141,27 @@
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
-  font-size: 0.875rem;
-  line-height: 1.55;
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--nt-text);
 }
 
 .nt-editor td,
 .nt-editor th {
   border: 1px solid var(--nt-border);
-  padding: 0.65rem 0.85rem;
+  padding: 0.5rem 0.65rem;
   vertical-align: top;
   position: relative;
-  min-width: 6rem;
+  min-width: 5.5rem;
   transition: background-color 0.12s ease;
 }
 
 .nt-editor th {
   background: var(--nt-header-bg);
   color: var(--nt-text);
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 

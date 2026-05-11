@@ -644,7 +644,7 @@ const DocForm = () => {
   return (
     <form onSubmit={handleSubmit(handleFinalSubmit)} className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-border/80 bg-background/70 shadow-fv-soft backdrop-blur-[var(--fv-header-blur)] supports-[backdrop-filter]:bg-background/55">
-        <div className="mx-auto flex min-w-0 max-w-[1280px] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-accent lg:hidden"
@@ -659,7 +659,7 @@ const DocForm = () => {
             <span className="hidden sm:inline">Back</span>
           </Button>
 
-          <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
             <Popover>
               <PopoverTrigger asChild>
@@ -733,18 +733,14 @@ const DocForm = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Step {currentStep + 1} of {STEPS.length}</p>
-                <h1 className="text-2xl font-bold tracking-[-0.03em] text-foreground sm:text-3xl">
-                  {STEPS[currentStep].title}
-                </h1>
-                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem]">
-                  {STEPS[currentStep].description}
-                </p>
+                <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground sm:text-[1.75rem]">{STEPS[currentStep].title}</h1>
+                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{STEPS[currentStep].description}</p>
               </div>
               <div className="min-h-5 text-xs font-medium text-muted-foreground sm:text-right sm:text-sm">{autoSaveStatus}</div>
             </div>
           </div>
 
-          <div className="fv-doc-content px-5 py-6 transition-opacity duration-300 sm:px-8 sm:py-10">
+          <div className="px-5 py-6 transition-opacity duration-300 sm:px-8 sm:py-8">
             <StepRenderer currentStep={currentStep} formProps={formProps} stepProps={stepProps} />
             {formError && (
               <p className="mt-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/15">

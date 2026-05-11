@@ -68,20 +68,17 @@ export default function ReviewStep({ values, userStories, trackingList, retrospe
     <section className="space-y-5">
       <div className="grid gap-4">
         {cards.map((card) => (
-          <div
-            key={card.title}
-            className="rounded-2xl border border-border/80 bg-card/85 p-5 shadow-inner transition-colors hover:border-primary/25 dark:border-white/10 dark:bg-card/40"
-          >
+          <div key={card.title} className="rounded-2xl border border-border/80 bg-card/85 p-5 shadow-inner transition-colors hover:border-primary/25 dark:border-white/10 dark:bg-card/40">
             <div className="flex items-start justify-between gap-4">
-              <h3 className="fv-doc-subsection-title text-lg tracking-tight text-foreground sm:text-xl">{card.title}</h3>
+              <h3 className="font-semibold tracking-tight text-foreground">{card.title}</h3>
               <Button type="button" variant="ghost" size="sm" onClick={() => onEditStep(card.step)} className="gap-2 rounded-xl text-primary hover:text-primary">
                 <Edit3 className="h-4 w-4" />
                 Edit
               </Button>
             </div>
-            <div className="mt-4 space-y-2 border-t border-border/60 pt-4 text-sm leading-relaxed text-muted-foreground">
+            <div className="mt-3 space-y-1 text-sm text-muted-foreground">
               {card.lines.map((line, index) => (
-                <p key={index} className="line-clamp-3 first:font-medium first:text-foreground/90">
+                <p key={index} className="line-clamp-2">
                   {line}
                 </p>
               ))}

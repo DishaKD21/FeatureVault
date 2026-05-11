@@ -7,7 +7,7 @@ export default function CreatorStep({ register, disabled = false }) {
   return (
     <section className="grid gap-7 sm:grid-cols-3">
       <div>
-        <Label className="fv-doc-field-label text-foreground">Name</Label>
+        <Label className="text-foreground">Name</Label>
         <Input
           className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
           disabled={disabled}
@@ -15,7 +15,7 @@ export default function CreatorStep({ register, disabled = false }) {
         />
       </div>
       <div>
-        <Label className="fv-doc-field-label text-foreground">Emp ID</Label>
+        <Label className="text-foreground">Emp ID</Label>
         <Input
           className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
           disabled={disabled}
@@ -23,7 +23,7 @@ export default function CreatorStep({ register, disabled = false }) {
         />
       </div>
       <div>
-        <Label className="fv-doc-field-label text-foreground">Total Time</Label>
+        <Label className="text-foreground">Total Time</Label>
         <Input type="number" className="mt-2.5 rounded-xl border-border/80 bg-background/55 dark:bg-card/35" disabled={disabled} {...register("whoCreatedIt.totalTime", { min: 0 })} />
       </div>
     </section>

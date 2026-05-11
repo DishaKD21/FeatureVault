@@ -15,13 +15,9 @@ export default function RequirementStep({ register, setValue, watch, disabled = 
 
   return (
     <section className="space-y-8">
-      <div className="fv-doc-panel">
-        <h3 className="fv-doc-block-title text-base sm:text-lg">Requirement elicitation</h3>
-      </div>
-
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <Label className="fv-doc-field-label text-foreground">Start Time</Label>
+          <Label className="text-foreground">Start Time</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -50,7 +46,7 @@ export default function RequirementStep({ register, setValue, watch, disabled = 
         </div>
 
         <div>
-          <Label className="fv-doc-field-label text-foreground">End Time</Label>
+          <Label className="text-foreground">End Time</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -80,7 +76,7 @@ export default function RequirementStep({ register, setValue, watch, disabled = 
       </div>
 
       <div>
-        <Label className="fv-doc-field-label text-foreground">Discussion</Label>
+        <Label className="text-foreground">Discussion</Label>
         <Textarea
           placeholder="Start discussion..."
           disabled={disabled}
