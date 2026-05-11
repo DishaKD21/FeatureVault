@@ -2,14 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Loader2, Plus } from "lucide-react";
+import Navbar from "@/components/navbar/Navbar";
 import DocumentSection from "@/components/dashboard/DocumentSection";
 import DiagramSection from "@/components/dashboard/DiagramSection";
+import { Button } from "@/components/ui/button";
 import { getAllDocuments, deleteDocument, exportDocument } from "@/lib/documentationApi";
-import {
-  deleteDiagram,
-  downloadDiagramPng,
-  getAllDiagrams,
-} from "@/lib/diagramApi";
+import { deleteDiagram, downloadDiagramPng, getAllDiagrams } from "@/lib/diagramApi";
 
 const DashboardView = () => {
   const [docs, setDocs] = useState([]);
@@ -18,7 +17,8 @@ const DashboardView = () => {
   const [downloadingDoc, setDownloadingDoc] = useState(null);
   const [downloadingDiagram, setDownloadingDiagram] = useState(null);
   const [deletingDiagram, setDeletingDiagram] = useState(null);
-  const [documentPage, setDocumentPage] = useState(1);
+  const [draftPage, setDraftPage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
   const [diagramPage, setDiagramPage] = useState(1);
 
   const standaloneDiagrams = useMemo(
@@ -93,55 +93,52 @@ const DashboardView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="mb-6 flex items-center justify-between rounded-xl bg-white px-6 py-3 shadow-md">
-        <h1 className="text-xl font-semibold">FeatureVault</h1>
-        <div className="flex gap-6">
-          <Link href="/" className="cursor-pointer hover:text-blue-500">
-            Home
-          </Link>
-          <Link href="/#features" className="cursor-pointer hover:text-blue-500">
-            Features
-          </Link>
-          <Link href="/diagram-editor" className="cursor-pointer hover:text-blue-500">
-            Diagram Tool
-          </Link>
-        </div>
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <Navbar />
+
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
+        <header className="mb-8 flex flex-col gap-4 border-b border-border/80 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
+          </div>
+          <Button asChild size="lg" className="h-11 shrink-0 rounded-xl shadow-fv-soft">
+            <Link href="/create-doc" className="inline-flex items-center gap-2">
+              <Plus className="size-4" />
+              New documentation
+            </Link>
+          </Button>
+        </header>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-20 shadow-fv-soft">
+            <Loader2 className="size-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading dashboard…</p>
+          </div>
+        ) : (
+          <>
+            <DocumentSection
+              docs={docs}
+              draftPage={draftPage}
+              setDraftPage={setDraftPage}
+              completedPage={completedPage}
+              setCompletedPage={setCompletedPage}
+              downloading={downloadingDoc}
+              onDownload={handleDownloadDocument}
+              onDelete={handleDeleteDocument}
+            />
+
+            <DiagramSection
+              diagrams={standaloneDiagrams}
+              page={diagramPage}
+              setPage={setDiagramPage}
+              downloading={downloadingDiagram}
+              deleting={deletingDiagram}
+              onDownload={handleDownloadDiagram}
+              onDelete={handleDeleteDiagram}
+            />
+          </>
+        )}
       </div>
-
-      <div className="mb-6 flex justify-center">
-        <Link
-          href="/create-doc"
-          className="rounded-lg border px-6 py-2 transition hover:bg-blue-500 hover:text-white"
-        >
-          Create New Documentation
-        </Link>
-      </div>
-
-      {loading ? (
-        <div className="py-10 text-center">Loading dashboard...</div>
-      ) : (
-        <>
-          <DocumentSection
-            docs={docs}
-            page={documentPage}
-            setPage={setDocumentPage}
-            downloading={downloadingDoc}
-            onDownload={handleDownloadDocument}
-            onDelete={handleDeleteDocument}
-          />
-
-          <DiagramSection
-            diagrams={standaloneDiagrams}
-            page={diagramPage}
-            setPage={setDiagramPage}
-            downloading={downloadingDiagram}
-            deleting={deletingDiagram}
-            onDownload={handleDownloadDiagram}
-            onDelete={handleDeleteDiagram}
-          />
-        </>
-      )}
     </div>
   );
 };

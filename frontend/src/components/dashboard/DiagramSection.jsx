@@ -28,10 +28,12 @@ export default function DiagramSection({
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-medium">Your Diagrams</h2>
+      <h2 className="mb-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Standalone diagrams</h2>
 
       {diagrams.length === 0 ? (
-        <p className="text-gray-500">No standalone diagrams available</p>
+        <div className="rounded-2xl border border-dashed border-border bg-muted/10 px-6 py-14 text-center text-sm text-muted-foreground">
+          No standalone diagrams.
+        </div>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -48,8 +50,25 @@ export default function DiagramSection({
           </div>
 
           {diagrams.length > ITEMS_PER_PAGE && (
-            <div className="mt-5 flex justify-center">
-              <Pagination value={page} onChange={setPage} total={totalPages} />
+            <div className="mt-6 flex justify-center rounded-xl border border-border bg-card/50 px-4 py-3">
+              <Pagination
+                value={page}
+                onChange={setPage}
+                total={totalPages}
+                size="sm"
+                color="teal"
+                style={{
+                  "--pagination-active-bg": "var(--primary)",
+                  "--pagination-active-color": "var(--primary-foreground)",
+                }}
+                styles={{
+                  control: {
+                    borderColor: "var(--border)",
+                    backgroundColor: "var(--card)",
+                    color: "var(--foreground)",
+                  },
+                }}
+              />
             </div>
           )}
         </>

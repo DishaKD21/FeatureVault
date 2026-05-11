@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import API_URL from "@/config";
+import { Button } from "@/components/ui/button";
 
 const imageUrlFor = (imagePath) => {
   if (!imagePath) return null;
@@ -16,45 +18,57 @@ export default function DiagramCard({ diagram, downloading, deleting, onDownload
   const title = `Diagram ${diagram._id?.slice(-6) || ""}`.trim();
 
   return (
-    <article className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex aspect-video items-center justify-center border-b border-gray-100 bg-gray-50">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-fv-soft transition hover:border-primary/20 hover:shadow-fv-panel">
+      <div className="flex aspect-video items-center justify-center border-b border-border bg-muted/20">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={`${title} preview`}
-            className="h-full w-full object-contain"
-          />
+          <img src={imageUrl} alt={`${title} preview`} className="h-full w-full object-contain" />
         ) : (
-          <span className="text-sm text-gray-400">No preview available</span>
+          <span className="text-sm text-muted-foreground">No preview available</span>
         )}
       </div>
 
-      <div className="p-4">
-        <div>
-          <h3 className="font-medium text-gray-900">{title}</h3>
-          <p className="mt-1 text-xs text-gray-500">Created at {createdAt}</p>
-        </div>
+      <div className="p-4 sm:p-5">
+        <h3 className="font-semibold text-foreground">{title}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{createdAt}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={`/diagram-editor?diagramId=${diagram._id}`}>
-            <button className="rounded border px-3 py-1 text-sm hover:bg-gray-100">
-              Edit
-            </button>
-          </Link>
-          <button
-            onClick={() => onDownload(diagram)}
+          <Button variant="outline" size="sm" className="h-8 rounded-lg border-border/80" asChild>
+            <Link href={`/diagram-editor?diagramId=${diagram._id}`}>Edit</Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-lg border-border/80"
             disabled={downloading === diagram._id || !diagram.image}
-            className="rounded border px-3 py-1 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => onDownload(diagram)}
           >
-            {downloading === diagram._id ? "Downloading..." : "Download PNG"}
-          </button>
-          <button
-            onClick={() => onDelete(diagram._id)}
+            {downloading === diagram._id ? (
+              <>
+                <Loader2 className="mr-1 size-3.5 animate-spin" />
+                …
+              </>
+            ) : (
+              "Download PNG"
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10"
             disabled={deleting === diagram._id}
-            className="rounded border px-3 py-1 text-sm hover:bg-red-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => onDelete(diagram._id)}
           >
-            {deleting === diagram._id ? "Deleting..." : "Delete"}
-          </button>
+            {deleting === diagram._id ? (
+              <>
+                <Loader2 className="mr-1 size-3.5 animate-spin" />
+                …
+              </>
+            ) : (
+              "Delete"
+            )}
+          </Button>
         </div>
       </div>
     </article>
