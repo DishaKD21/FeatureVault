@@ -62,11 +62,13 @@ export default function StepSidebar({
               title={allowed ? undefined : "Complete earlier steps"}
               className={cn(
                 "group flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors duration-[var(--fv-transition-fast)]",
-                active && "bg-accent/90 dark:bg-white/[0.05]",
+                /* Brand lime wash — visible in light + dark (matches diagram editor #c4f042) */
+                active &&
+                  "bg-[#c4f042]/18 ring-1 ring-[#c4f042]/35 dark:bg-[#c4f042]/14 dark:ring-[#c4f042]/40",
                 !active &&
                   completed &&
-                  "border border-transparent hover:bg-accent/65 dark:border-white/[0.04] dark:hover:bg-white/[0.035]",
-                !active && !completed && "opacity-70 hover:bg-accent/55 dark:hover:bg-white/[0.02]",
+                  "border border-transparent hover:bg-[#c4f042]/10 dark:border-white/[0.04] dark:hover:bg-[#c4f042]/08",
+                !active && !completed && "opacity-70 hover:bg-muted/80 dark:hover:bg-white/[0.03]",
                 !allowed && "cursor-not-allowed opacity-45 grayscale-[0.2]",
               )}
             >
@@ -74,7 +76,7 @@ export default function StepSidebar({
                 className={cn(
                   "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full border-2 text-[13px] font-semibold leading-none tracking-tight transition-colors duration-[var(--fv-transition-fast)]",
                   active &&
-                    "border-primary bg-primary text-primary-foreground shadow-[0_0_0_1px_color-mix(in_oklch,var(--primary),transparent_82%)]",
+                    "border-[#c4f042] bg-[#c4f042] text-[#111827] shadow-[0_0_0_1px_rgba(196,240,66,0.45)]",
                   !active &&
                     completed &&
                     "border-primary/45 bg-background text-primary dark:border-primary/55 dark:bg-primary/15 dark:text-primary",
@@ -90,7 +92,7 @@ export default function StepSidebar({
                 <span
                   className={cn(
                     "font-semibold leading-snug tracking-[-0.01em]",
-                    active ? "text-primary" : completed ? "text-foreground" : "text-muted-foreground",
+                    active ? "text-[#3d5210] dark:text-[#c4f042]" : completed ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
                   {step.title}
@@ -107,15 +109,14 @@ export default function StepSidebar({
           <span className="text-muted-foreground">
             Step {currentStep + 1} of {stepCount}
           </span>
-          <span className="tabular-nums font-medium text-primary">{progressPct}% complete</span>
+          <span className="tabular-nums font-medium text-[#4d6210] dark:text-[#c4f042]">{progressPct}% complete</span>
         </div>
         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted dark:bg-muted/55">
           <div
-            className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+            className="h-full rounded-full bg-[#c4f042] transition-[width] duration-500 ease-out"
             style={{
               width: `${progressPct}%`,
-              boxShadow:
-                "0 0 22px color-mix(in oklch, var(--primary), transparent 76%), 0 0 1px color-mix(in oklch, var(--primary), transparent 40%)",
+              boxShadow: "0 0 18px rgba(196, 240, 66, 0.45), 0 0 1px rgba(196, 240, 66, 0.5)",
             }}
           />
         </div>
