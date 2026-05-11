@@ -1,172 +1,137 @@
-import {
-  Document,
-  Paragraph,
-  HeadingLevel,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  TextRun,
-  ImageRun
-} from "docx";
-
+import fs from "fs";
+import path from "path";
 import fetch from "node-fetch";
-
-function createHeading(text) {
-  return new Paragraph({
-    children: [new TextRun({ text, bold: true, size: 28 })],
-    heading: HeadingLevel.HEADING_1,
-  });
-}
-
-function createParagraph(text) {
-  return new Paragraph({
-    children: [new TextRun({ text: String(text || ""), size: 24 })],
-  });
-}
+import { Document } from "docx";
+import {
+  createBodyParagraph,
+  createBulletParagraph,
+  createCenteredImageParagraph,
+  createDocTitle,
+  createLabeledParagraph,
+  createMutedParagraph,
+  createSectionHeading,
+  createStyledTable,
+  createSubsectionHeading,
+  defaultSectionProps,
+} from "./documentDocxStyles.js";
 
 function getAllKeys(arr = []) {
   const keys = new Set();
-  arr.forEach(obj => Object.keys(obj).forEach(k => keys.add(k)));
+  arr.forEach((obj) => Object.keys(obj || {}).forEach((k) => keys.add(k)));
   return Array.from(keys);
 }
 
-function createDynamicTable(headers = [], data = []) {
-  if (!headers.length || !data.length) return null;
-
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: headers.map(
-          (header) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  children: [new TextRun({ text: header, bold: true })],
-                }),
-              ],
-            })
-        ),
-      }),
-      ...data.map((row) =>
-        new TableRow({
-          children: headers.map(
-            (key) =>
-              new TableCell({
-                children: [createParagraph(row[key])],
-              })
-          ),
-        })
-      ),
-    ],
-  });
+function formatDocDate(value) {
+  if (value === undefined || value === null || value === "") return "—";
+  try {
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return String(value);
+  }
 }
 
-import fs from "fs";
-import path from "path";
-
 async function getImageBuffer(imagePath) {
-  // If it's a full URL, we could fetch it, but diagram.image is stored as relative path like "upload/filename"
   if (imagePath.startsWith("http")) {
     const res = await fetch(imagePath);
     const buffer = await res.arrayBuffer();
     return Buffer.from(buffer);
   }
-  
-  // Read from local file system
+
   const absolutePath = path.resolve(process.cwd(), imagePath);
-  return await fs.promises.readFile(absolutePath);
+  return fs.promises.readFile(absolutePath);
 }
 
 export async function buildDocument(data) {
   const children = [];
 
-  children.push(
-    new Paragraph({
-      text: data.feature?.featureName || "Untitled Document",
-      heading: HeadingLevel.TITLE,
-    })
-  );
+  children.push(createDocTitle(data.feature?.featureName || "Untitled Document"));
 
-  children.push(createHeading("Requirement Elicitation"));
-  children.push(createParagraph(`Start: ${data.requirementElicitation?.startTime}`));
-  children.push(createParagraph(data.requirementElicitation?.discussion));
-  children.push(createParagraph(`End: ${data.requirementElicitation?.endTime}`));
+  /* ─── Requirement elicitation ─── */
+  children.push(createSectionHeading("Requirement elicitation"));
+  children.push(createLabeledParagraph("Start", formatDocDate(data.requirementElicitation?.startTime)));
+  children.push(createLabeledParagraph("End", formatDocDate(data.requirementElicitation?.endTime)));
+  children.push(createBodyParagraph(data.requirementElicitation?.discussion || ""));
 
-  children.push(createHeading("Feature Description"));
-  children.push(createParagraph(`Start: ${data.feature?.featureDescription?.startTime}`));
-  children.push(createParagraph(data.feature?.featureDescription?.requirementAnalysis));
-  children.push(createParagraph(`End: ${data.feature?.featureDescription?.endTime}`));
+  /* ─── Feature description ─── */
+  children.push(createSectionHeading("Feature description"));
+  children.push(createLabeledParagraph("Start", formatDocDate(data.feature?.featureDescription?.startTime)));
+  children.push(createLabeledParagraph("End", formatDocDate(data.feature?.featureDescription?.endTime)));
+  children.push(createBodyParagraph(data.feature?.featureDescription?.requirementAnalysis || ""));
 
+  /* ─── Design diagram ─── */
   if (data.designDiagram?.imageLink) {
-    children.push(createHeading("Design Diagram"));
+    children.push(createSectionHeading("Design diagram"));
 
     try {
       const imgBuffer = await getImageBuffer(data.designDiagram.imageLink);
-
-      children.push(
-        new Paragraph({
-          children: [
-            new ImageRun({
-              data: imgBuffer,
-              transformation: { width: 500, height: 300 },
-            }),
-          ],
-        })
-      );
-    } catch (err) {
-      children.push(createParagraph(`[Image could not be loaded: ${data.designDiagram.imageLink}]`));
+      children.push(createCenteredImageParagraph(imgBuffer, 520, 320));
+    } catch {
+      children.push(createMutedParagraph(`[Image could not be loaded: ${data.designDiagram.imageLink}]`));
     }
   }
 
   if (data.designDiagram?.explanation) {
-    children.push(createHeading("Diagram Explanation"));
-    children.push(createParagraph(data.designDiagram.explanation));
+    children.push(createSectionHeading("Diagram explanation"));
+    children.push(createBodyParagraph(data.designDiagram.explanation));
   }
 
-  children.push(createHeading("User Story Distribution"));
-
+  /* ─── User story distribution ─── */
+  children.push(createSectionHeading("User story distribution"));
   if (data.featureEstimate?.userStoryDistribution?.length) {
     const headers = getAllKeys(data.featureEstimate.userStoryDistribution);
-    const table = createDynamicTable(headers, data.featureEstimate.userStoryDistribution);
+    const table = createStyledTable(headers, data.featureEstimate.userStoryDistribution);
     if (table) children.push(table);
+  } else {
+    children.push(createMutedParagraph("No user story rows were added for this section."));
   }
 
-  children.push(createHeading("Tracking & Release Details"));
+  /* ─── Tracking & release ─── */
+  children.push(createSectionHeading("Tracking & release details"));
 
-  data.trackingAndReleaseDetails?.forEach((item) => {
-    children.push(createParagraph(`User Story: ${item.userStoryNumber}`));
-    children.push(createParagraph(`JIRA: ${item.userStoryLink}`));
-    children.push(createParagraph(`Description: ${item.codeDescription}`));
+  data.trackingAndReleaseDetails?.forEach((item, index) => {
+    children.push(createSubsectionHeading(`User story ${index + 1}`));
+    children.push(createLabeledParagraph("User story ID / number", item.userStoryNumber));
+    children.push(createLabeledParagraph("Issue / story link", item.userStoryLink));
+    children.push(createLabeledParagraph("Code description", item.codeDescription));
 
-    item.prLinks?.forEach((l) =>
-      children.push(createParagraph(`PR: ${l}`))
-    );
-
-    item.pipelineBuildLinks?.forEach((l) =>
-      children.push(createParagraph(`Build: ${l}`))
-    );
-
-    item.environmentDeployLinks?.forEach((l) =>
-      children.push(createParagraph(`Deploy: ${l}`))
-    );
+    if (item.prLinks?.length) {
+      children.push(createBodyParagraph("Pull requests:"));
+      item.prLinks.forEach((l) => children.push(createBulletParagraph(l)));
+    }
+    if (item.pipelineBuildLinks?.length) {
+      children.push(createBodyParagraph("Pipeline / build links:"));
+      item.pipelineBuildLinks.forEach((l) => children.push(createBulletParagraph(l)));
+    }
+    if (item.environmentDeployLinks?.length) {
+      children.push(createBodyParagraph("Environment / deploy links:"));
+      item.environmentDeployLinks.forEach((l) => children.push(createBulletParagraph(l)));
+    }
   });
 
-  children.push(createHeading("Retrospective"));
-
+  /* ─── Retrospective ─── */
+  children.push(createSectionHeading("Retrospective"));
   if (data.retrospectiveSection?.length) {
     const headers = getAllKeys(data.retrospectiveSection);
-    const table = createDynamicTable(headers, data.retrospectiveSection);
+    const table = createStyledTable(headers, data.retrospectiveSection);
     if (table) children.push(table);
+  } else {
+    children.push(createMutedParagraph("No retrospective table rows were added."));
   }
 
-  children.push(createHeading("Created By"));
-  children.push(createParagraph(`Name: ${data.whoCreatedIt?.name}`));
-  children.push(createParagraph(`Emp ID: ${data.whoCreatedIt?.empId}`));
-  children.push(createParagraph(`Time: ${data.whoCreatedIt?.totalTime} hrs`));
+  /* ─── Created by ─── */
+  children.push(createSectionHeading("Created by"));
+  children.push(createLabeledParagraph("Name", data.whoCreatedIt?.name));
+  children.push(createLabeledParagraph("Employee ID", data.whoCreatedIt?.empId));
+  children.push(createLabeledParagraph("Total time", `${data.whoCreatedIt?.totalTime ?? "—"} hours`));
 
   return new Document({
-    sections: [{ children }],
+    sections: [
+      {
+        properties: defaultSectionProps,
+        children,
+      },
+    ],
   });
 }
