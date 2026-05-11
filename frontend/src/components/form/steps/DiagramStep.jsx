@@ -18,11 +18,11 @@ export default function DiagramStep({
 }) {
   return (
     <section className="space-y-8">
-      <div className="rounded-2xl border border-border/80 bg-muted/25 p-6 shadow-inner dark:border-white/10 dark:bg-card/30">
+      <div className="fv-doc-panel space-y-4 shadow-inner dark:border-white/10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-semibold text-foreground">Diagram workspace</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="fv-doc-subsection-title text-base sm:text-lg">Diagram workspace</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
               DocId: {docId || "N/A"} | Diagram: {diagramId || "None"}
             </p>
           </div>
@@ -63,8 +63,8 @@ export default function DiagramStep({
           <div className="mt-6 rounded-2xl border border-border/80 bg-card/80 p-5 dark:border-white/10">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-foreground">AI explanation</p>
-                <p className="text-xs text-muted-foreground">Generate a short description for this diagram.</p>
+                <p className="fv-doc-subsection-title text-sm sm:text-base">AI explanation</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Generate a short description for this diagram.</p>
               </div>
               <Button
                 type="button"

@@ -46,28 +46,36 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-border/80 bg-background/85 px-4 py-3 shadow-fv-soft backdrop-blur-[var(--fv-header-blur)] supports-[backdrop-filter]:bg-background/70 sm:gap-4 sm:px-6">
-      <ThemeLogo priority />
+    <nav className="sticky top-0 z-50 grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border/80 bg-background/85 px-3 py-2.5 shadow-fv-soft backdrop-blur-[var(--fv-header-blur)] supports-[backdrop-filter]:bg-background/70 sm:gap-3 sm:px-5 sm:py-3">
+      <div className="min-w-0 shrink-0">
+        <ThemeLogo priority />
+      </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-x-auto text-xs text-muted-foreground sm:gap-6 sm:text-sm">
-        <Link href="/" className="shrink-0 rounded-lg px-2 py-1.5 transition hover:bg-accent/80 hover:text-foreground">
+      <div className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden">
+        <Link
+          href="/"
+          className="shrink-0 rounded-lg px-2 py-1.5 text-[11px] text-muted-foreground transition hover:bg-accent/80 hover:text-foreground sm:text-sm"
+        >
           Home
         </Link>
-        <Link href="/#features" className="shrink-0 rounded-lg px-2 py-1.5 transition hover:bg-accent/80 hover:text-foreground">
+        <Link
+          href="/#features"
+          className="shrink-0 rounded-lg px-2 py-1.5 text-[11px] text-muted-foreground transition hover:bg-accent/80 hover:text-foreground sm:text-sm"
+        >
           Features
         </Link>
         <button
           type="button"
           disabled={redirectingTo === "/diagram-editor"}
           onClick={() => goProtected("/diagram-editor")}
-          className="shrink-0 rounded-lg px-2 py-1.5 transition hover:bg-accent/80 hover:text-foreground disabled:cursor-wait disabled:opacity-50"
+          className="shrink-0 rounded-lg px-1.5 py-1.5 text-[11px] text-muted-foreground transition hover:bg-accent/80 hover:text-foreground disabled:cursor-wait disabled:opacity-50 sm:text-sm"
         >
           <span className="hidden sm:inline">Diagram Tool</span>
           <span className="sm:hidden">Diagram</span>
         </button>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
         {checkingAuth ? (
           <span className="hidden text-sm text-muted-foreground sm:inline">Checking...</span>
         ) : !authenticated ? (

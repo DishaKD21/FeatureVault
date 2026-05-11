@@ -51,8 +51,8 @@ const MultiInput = ({ label, value, onChange }) => {
   }, []);
 
   return (
-    <div className="space-y-2">
-      <p className="font-medium text-foreground">{label}</p>
+    <div className="space-y-2.5">
+      <p className="fv-doc-field-label text-foreground">{label}</p>
 
       {values.map((val, i) => (
         <div key={i} className="flex gap-2">

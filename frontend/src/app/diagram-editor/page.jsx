@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import DiagramEditor from '@/modules/diagrameditor/DiagramEditor';
+import DiagramEditorViewportGate from '@/components/diagram/DiagramEditorViewportGate';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function LoadingFallback() {
@@ -20,7 +20,7 @@ export default function DiagramEditorPage() {
     <ProtectedRoute>
       <Suspense fallback={<LoadingFallback />}>
         <div>
-          <DiagramEditor />
+          <DiagramEditorViewportGate />
         </div>
       </Suspense>
     </ProtectedRoute>

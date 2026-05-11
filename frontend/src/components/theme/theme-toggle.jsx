@@ -23,7 +23,7 @@ export default function ThemeToggle({ className }) {
       aria-pressed={isDark}
       disabled={!mounted}
       className={cn(
-        "relative inline-flex h-9 w-[4.125rem] shrink-0 cursor-pointer items-center px-2",
+        "relative hidden h-9 w-[4.125rem] shrink-0 cursor-pointer items-center px-2 min-[800px]:inline-flex",
         "rounded-full border border-border bg-muted/60 shadow-fv-soft",
         "transition-[background-color,border-color,box-shadow] duration-300 ease-out",
         "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/35",

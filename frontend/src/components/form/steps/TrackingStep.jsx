@@ -9,7 +9,8 @@ export default function TrackingStep({ trackingList, addTracking, removeTracking
   return (
     <section className="space-y-6">
       {trackingList.map((item, index) => (
-        <div key={index} className="relative space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-5 dark:border-white/10 dark:bg-card/25">
+        <div key={index} className="fv-doc-panel relative space-y-5 dark:border-white/10">
+          <h3 className="fv-doc-subsection-title pr-12 text-base sm:text-lg">User story {index + 1}</h3>
           <div className="absolute right-4 top-4">
             <Button
               type="button"
@@ -25,7 +26,7 @@ export default function TrackingStep({ trackingList, addTracking, removeTracking
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="font-medium text-foreground">User Story Number</label>
+              <label className="fv-doc-field-label block text-foreground">User Story Number</label>
               <Input
                 className="mt-2 rounded-xl border-border/80 bg-background/55 dark:bg-card/35"
                 disabled={disabled}
@@ -47,7 +48,7 @@ export default function TrackingStep({ trackingList, addTracking, removeTracking
           <MultiInput label="PR Links" value={item.prLinks} onChange={(val) => handleTrackingChange(index, "prLinks", val)} />
 
           <div>
-            <label className="font-medium text-foreground">Code Description</label>
+            <label className="fv-doc-field-label block text-foreground">Code Description</label>
             <textarea
               className="mt-2 min-h-28 w-full resize-y rounded-xl border border-border/80 bg-background/55 p-3 text-foreground shadow-inner outline-none transition-colors focus-visible:border-primary/50 dark:bg-card/35"
               disabled={disabled}

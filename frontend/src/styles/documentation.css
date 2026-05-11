@@ -1,0 +1,88 @@
+/**
+ * Documentation wizard — formal report-style hierarchy (SRS-inspired).
+ * Scoped under .fv-doc-content so homepage/marketing stay unchanged.
+ */
+
+@layer components {
+  .fv-doc-content {
+    --fv-doc-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    max-width: 52rem;
+    margin-inline: auto;
+  }
+
+  .fv-doc-content > section {
+    scroll-margin-top: 1rem;
+  }
+
+  /* Vertical rhythm between major blocks inside a step */
+  .fv-doc-content section > * + * {
+    margin-top: 1.75rem;
+  }
+
+  /* Primary block heading — high-contrast band (report-style) */
+  .fv-doc-block-title {
+    font-family: var(--fv-doc-serif);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    margin-bottom: 1.25rem;
+    padding: 0.65rem 1rem;
+    border-radius: calc(var(--radius) - 2px);
+    text-align: center;
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  .dark .fv-doc-block-title {
+    background: color-mix(in oklch, var(--muted) 55%, var(--card));
+    color: var(--foreground);
+    border: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+  }
+
+  /* Secondary heading (card / panel titles) */
+  .fv-doc-subsection-title {
+    font-family: var(--fv-doc-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--foreground);
+    margin-bottom: 0.35rem;
+  }
+
+  .fv-doc-content .fv-doc-panel {
+    border-radius: 1rem;
+    border: 1px solid color-mix(in oklch, var(--border) 90%, transparent);
+    background: color-mix(in oklch, var(--card) 88%, var(--muted));
+    padding: 1.35rem 1.35rem 1.5rem;
+    box-shadow: var(--fv-shadow-soft, 0 1px 3px oklch(0 0 0 / 0.06));
+  }
+
+  .dark .fv-doc-content .fv-doc-panel {
+    background: color-mix(in oklch, var(--card) 70%, transparent);
+    border-color: color-mix(in oklch, var(--border) 80%, transparent);
+  }
+
+  .fv-doc-content :is(label, .fv-doc-field-label) {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--foreground);
+  }
+
+  .fv-doc-content ul.fv-doc-list {
+    margin: 0.75rem 0 0;
+    padding-left: 1.35rem;
+    list-style-type: disc;
+    color: var(--foreground);
+    line-height: 1.65;
+  }
+
+  .fv-doc-content ul.fv-doc-list li {
+    margin-bottom: 0.35rem;
+  }
+
+  .fv-doc-content ul.fv-doc-list li::marker {
+    color: color-mix(in oklch, var(--primary) 65%, var(--muted-foreground));
+  }
+}
