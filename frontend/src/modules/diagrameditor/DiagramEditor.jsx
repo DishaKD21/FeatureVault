@@ -2,6 +2,11 @@
 
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTheme } from '@/components/theme/theme-provider';
+import ThemeToggle from '@/components/theme/theme-toggle';
+import { Button } from '@/components/ui/button';
+import { Maximize2 } from 'lucide-react';
+import './diagram-editor.css';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -173,7 +178,8 @@ function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [mode, setMode] = useState('select');
-  const [theme, setTheme] = useState('dark');
+  const { theme: appTheme } = useTheme();
+  const theme = appTheme;
   const [edgeSourceNode, setEdgeSourceNode] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -704,18 +710,22 @@ function Playground() {
   // Loading state
   if (isLoading) {
     return (
-      <div className={`flex w-screen h-screen items-center justify-center ${theme === 'dark' ? 'bg-[#0A0A10]' : 'bg-gray-50'}`}>
+      <div className="diagram-editor-root flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Loading diagram...</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading diagram…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`flex w-screen h-screen ${theme === 'dark' ? 'bg-[#0A0A10]' : 'bg-gray-50'}`} onKeyDown={onKeyDown} tabIndex={0}>
-      <div className={`flex-1 relative ${cursorClass}`} ref={reactFlowWrapper}>
+    <div
+      className={`diagram-editor-root flex h-screen w-screen bg-background text-foreground transition-colors duration-300 ${cursorClass}`}
+      onKeyDown={onKeyDown}
+      tabIndex={0}
+    >
+      <div className="relative flex-1" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodesWithCallbacks}
           edges={edges}
@@ -738,77 +748,80 @@ function Playground() {
           connectionLineStyle={{ stroke: edgeColor, strokeWidth: 2 }}
           defaultEdgeOptions={buildEdgeStyle()}
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color={theme === 'dark' ? "#2A2D3E" : "#d1d5db"} />
-          <Controls showInteractive={false} className={`rounded-xl! border! shadow-lg! ${theme === 'dark' ? 'border-white/10! bg-[#1B1B29]! fill-gray-400! [&_button:hover]:bg-white/5!' : 'border-gray-200! bg-white! fill-gray-600! [&_button:hover]:bg-gray-50!'}`} />
+          <Background variant={BackgroundVariant.Dots} gap={28} size={1.15} />
+          <Controls
+            showInteractive={false}
+            className="overflow-hidden rounded-2xl! border! border-border! bg-card/95! shadow-fv-soft! backdrop-blur-md! [&_button]:text-muted-foreground! [&_button:hover]:bg-muted! [&_svg]:fill-current!"
+          />
           <MiniMap
-            nodeStrokeColor="#c4f042"
-            nodeColor={theme === 'dark' ? '#303352' : '#e0e7ff'}
-            maskColor={theme === 'dark' ? "rgba(10,10,16,0.85)" : "rgba(255,255,255,0.85)"}
-            className={`rounded-xl! border! shadow-lg! ${theme === 'dark' ? 'border-white/10! bg-[#1B1B29]!' : 'border-gray-200! bg-white/90!'}`}
+            nodeStrokeColor="var(--primary)"
+            nodeColor={theme === 'dark' ? 'oklch(0.32 0.02 264)' : 'oklch(0.92 0.01 264)'}
+            maskColor={theme === 'dark' ? 'color-mix(in oklch, var(--background), transparent 12%)' : 'color-mix(in oklch, var(--background), transparent 8%)'}
+            className="overflow-hidden rounded-2xl! border! border-border! bg-card/95! shadow-fv-soft!"
             style={{ height: 90, width: 130 }}
           />
         </ReactFlow>
 
-        {/* Top Right Controls */}
-        <div className="absolute top-6 right-6 z-10 flex items-center gap-3">
-          <button
-            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-            className={`flex items-center justify-center w-11 h-11 rounded-2xl backdrop-blur-xl border transition-all ${theme === 'dark' ? 'bg-[#1B1B29]/95 border-white/5 text-gray-300 hover:text-white shadow-[0_8px_40px_rgba(0,0,0,0.2)]' : 'bg-white/95 border-gray-200 text-gray-600 hover:text-gray-900 shadow-xl'}`}
-            title="Toggle Theme"
+        {/* Top bar — matches app chrome; global theme toggle */}
+        <div className="absolute right-4 top-4 z-10 flex flex-wrap items-center justify-end gap-2 sm:right-6 sm:top-6 sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 shrink-0 rounded-xl border-border/80 bg-card/90 shadow-fv-soft backdrop-blur-md"
+            onClick={handleFitView}
+            title="Fit view"
           >
-            {theme === 'dark' ? (
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            ) : (
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            )}
-          </button>
-          
-          {/* ─── DOCUMENT MODE: two buttons ─── */}
+            <Maximize2 className="size-4" aria-hidden />
+          </Button>
+          <ThemeToggle className="shrink-0" />
+
           {!isStandaloneMode && docId ? (
             <>
-              {/* Download PNG locally */}
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 gap-2 rounded-xl border-border/80 bg-card/90 px-3 shadow-fv-soft backdrop-blur-md sm:px-4"
                 onClick={handleDownload}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl font-medium transition-all shadow-lg ${theme === 'dark' ? 'bg-[#1B1B29]/95 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10' : 'bg-white/95 border border-gray-200 text-gray-600 hover:text-gray-900 shadow-xl'}`}
                 title="Download diagram as PNG"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                   <polyline points="8 17 12 21 16 17" />
                   <line x1="12" y1="12" x2="12" y2="21" />
                   <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
                 </svg>
-                Save Diagram (Download)
-              </button>
-              {/* Save to backend + redirect */}
-              <button
-                onClick={handleSaveToBackend}
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+              <Button
+                type="button"
+                className="h-10 gap-2 rounded-xl px-4 shadow-fv-soft sm:px-5"
                 disabled={isSaving}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition-all shadow-xl ${isSaving ? 'bg-emerald-500/50 text-white/70 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20 active:scale-95'}`}
+                onClick={handleSaveToBackend}
                 title="Save to backend and return to document"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
                   <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
                   <polyline points="17 21 17 13 7 13 7 21" />
                   <polyline points="7 3 7 8 15 8" />
                 </svg>
-                {isSaving ? 'Saving...' : 'Save to Document'}
-              </button>
+                {isSaving ? 'Saving…' : 'Save to document'}
+              </Button>
             </>
           ) : (
-            /* ─── STANDALONE MODE: single button ─── */
-            <button
-              onClick={handleSaveToBackend}
+            <Button
+              type="button"
+              className="h-10 gap-2 rounded-xl px-4 shadow-fv-soft sm:px-5"
               disabled={isSaving}
-              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition-all shadow-xl ${isSaving ? 'bg-emerald-500/50 text-white/70 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20 active:scale-95'}`}
-              title="Download PNG and save to backend"
+              onClick={handleSaveToBackend}
+              title="Save diagram to workspace"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
                 <polyline points="8 17 12 21 16 17" />
                 <line x1="12" y1="12" x2="12" y2="21" />
                 <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
               </svg>
-              {isSaving ? 'Saving...' : 'Save Diagram'}
-            </button>
+              {isSaving ? 'Saving…' : 'Save diagram'}
+            </Button>
           )}
         </div>
       </div>

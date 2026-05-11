@@ -6,10 +6,10 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center w-screen h-screen bg-[#0A0A10]">
+    <div className="flex h-screen w-screen items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        <p className="text-gray-400">Loading editor...</p>
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Loading editor…</p>
       </div>
     </div>
   );

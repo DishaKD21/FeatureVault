@@ -109,12 +109,12 @@ const NEON_GREEN = '#c4f042';
 const NEON_PURPLE = '#b95cf2';
 
 const TABS = [
-  { id: 'select', icon: Icons.cursor, activeColor: NEON_GREEN, title: 'Select' },
-  { id: 'pan', icon: Icons.hand, activeColor: NEON_GREEN, title: 'Pan Canvas' },
-  { id: 'nodes', icon: Icons.nodeIcon, activeColor: NEON_GREEN, title: 'Node Library' },
-  { id: 'edge', icon: Icons.edgeIcon, activeColor: NEON_GREEN, title: 'Edges' },
-  { id: 'text', icon: Icons.textStyle, activeColor: NEON_GREEN, title: 'Text Formatting' },
-  { id: 'palette', icon: Icons.palette, activeColor: NEON_PURPLE, title: 'Styles & Colors' },
+  { id: 'select', icon: Icons.cursor, activeColor: NEON_GREEN, title: 'Select', tooltip: 'Select — click & drag nodes' },
+  { id: 'pan', icon: Icons.hand, activeColor: NEON_GREEN, title: 'Pan', tooltip: 'Pan — drag canvas' },
+  { id: 'nodes', icon: Icons.nodeIcon, activeColor: NEON_GREEN, title: 'Nodes', tooltip: 'Node library — drag onto canvas' },
+  { id: 'edge', icon: Icons.edgeIcon, activeColor: NEON_GREEN, title: 'Edges', tooltip: 'Connect — click source then target' },
+  { id: 'text', icon: Icons.textStyle, activeColor: NEON_GREEN, title: 'Text', tooltip: 'Text formatting — select a node' },
+  { id: 'palette', icon: Icons.palette, activeColor: NEON_PURPLE, title: 'Styles', tooltip: 'Colors & edge motion' },
 ];
 
 const colorPalette = [
@@ -252,46 +252,49 @@ export default function Sidebar({
   const isDrawerOpen = activeTab && activeTab !== 'pan';
 
   return (
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-start z-10 pointer-events-none">
-      
-      {/* ─── Floating Vertical Toolbar ─── */}
-      <div className={`w-[60px] flex flex-col items-center py-4 backdrop-blur-2xl rounded-[18px] border shadow-[0_8px_40px_rgba(0,0,0,0.2)] pointer-events-auto ${theme === 'dark' ? 'bg-[#1B1B29]/95 border-white/5' : 'bg-white/95 border-gray-200'}`}>
-        <div className="flex flex-col gap-2">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
+    <div className="pointer-events-none absolute left-4 top-1/2 z-10 flex max-h-[85vh] -translate-y-1/2 items-start gap-3 sm:left-6">
+      {/* ─── Floating vertical toolbar (left edge) ─── */}
+      <div className="pointer-events-auto flex w-[52px] shrink-0 flex-col items-center gap-1 rounded-full border border-border bg-card/95 py-3 shadow-fv-panel backdrop-blur-xl sm:w-[56px]">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <div key={tab.id} className="fv-diagram-tool">
               <button
-                key={tab.id}
+                type="button"
                 onClick={() => handleTabClick(tab.id)}
-                title={tab.title}
+                aria-label={tab.title}
+                aria-pressed={isActive}
                 className={`
-                  relative w-[44px] h-[44px] flex items-center justify-center rounded-2xl transition-all duration-300
-                  ${isActive 
-                    ? `text-[${tab.activeColor}]` 
-                    : theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                  relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200
+                  ${isActive
+                    ? 'bg-primary text-primary-foreground shadow-[0_0_0_1px_color-mix(in_oklch,var(--primary),transparent_70%)]'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }
                 `}
-                style={{
-                  color: isActive ? tab.activeColor : undefined,
-                  backgroundColor: isActive ? `${tab.activeColor}1A` : undefined,
-                  boxShadow: isActive ? `0 0 20px ${tab.activeColor}33` : undefined,
-                }}
+                style={
+                  isActive && tab.id === 'palette'
+                    ? { backgroundColor: `${tab.activeColor}`, color: '#fff' }
+                    : undefined
+                }
               >
                 {tab.icon}
               </button>
-            );
-          })}
-        </div>
+              <span className="fv-diagram-tooltip">{tab.tooltip}</span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* ─── Expandable Drawer ─── */}
-      <div 
+      {/* ─── Expandable drawer (opens to the right of toolbar) ─── */}
+      <div
         className={`
-          ml-4 transition-all duration-400 ease-out origin-left pointer-events-auto
-          ${isDrawerOpen ? 'w-[280px] opacity-100 scale-100 translate-x-0' : 'w-0 opacity-0 scale-95 -translate-x-4 pointer-events-none'}
+          origin-left transition-all duration-300 ease-out
+          ${isDrawerOpen ? 'pointer-events-auto w-[min(280px,calc(100vw-6rem))] translate-x-0 scale-100 opacity-100' : 'pointer-events-none w-0 -translate-x-1 scale-95 opacity-0'}
         `}
       >
-        <div className={`w-[280px] max-h-[85vh] overflow-y-auto custom-scrollbar backdrop-blur-2xl rounded-2xl border shadow-[0_8px_40px_rgba(0,0,0,0.2)] ${theme === 'dark' ? 'bg-[rgba(27,27,41,0.92)] border-white/5 text-white' : 'bg-white/95 border-gray-200 text-gray-800'}`}>
+        <div
+          className={`custom-scrollbar max-h-[85vh] w-[min(280px,calc(100vw-6rem))] overflow-y-auto rounded-2xl border border-border bg-popover/95 text-popover-foreground shadow-fv-panel backdrop-blur-xl dark:bg-card/95`}
+        >
           <div className="p-5">
             
             {/* Drawer Header */}
@@ -517,7 +520,6 @@ export default function Sidebar({
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

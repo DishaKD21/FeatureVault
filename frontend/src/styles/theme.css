@@ -133,4 +133,28 @@ body {
   .dark .fv-home-section-muted {
     background-color: oklch(0.255 0.004 264);
   }
+
+  /* Auth pages — subtle depth, same tokens as rest of app */
+  .fv-auth-shell {
+    position: relative;
+    min-height: 100vh;
+    background-color: var(--background);
+  }
+
+  .fv-auth-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 55% at 50% -15%, color-mix(in oklch, var(--primary), transparent 88%), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in oklch, var(--primary), transparent 92%), transparent 45%);
+    opacity: 1;
+  }
+
+  .fv-auth-inner {
+    position: relative;
+    z-index: 1;
+  }
 }

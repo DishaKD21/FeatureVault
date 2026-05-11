@@ -1,23 +1,30 @@
 "use client";
+
 import Image from "next/image";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Google from "../../../public/google.svg";
 import Link from "next/link";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../authentication/firebase";
+import { auth, provider } from "./firebase";
 import { toast } from "react-toastify";
 import { getPostAuthRedirect, syncFirebaseUser } from "@/components/auth/useAuth";
+import ThemeLogo from "@/components/branding/ThemeLogo";
+import ThemeToggle from "@/components/theme/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Register = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: ""
+    password: "",
   });
 
   const [errors, setErrors] = useState({});
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -26,7 +33,7 @@ const Register = () => {
   };
 
   const validateForm = () => {
-    let newErrors = {};
+    const newErrors = {};
     if (formData.name.length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     }
@@ -53,164 +60,138 @@ const Register = () => {
       toast.error("Please fix form errors");
     } else {
       try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         await updateProfile(userCredential.user, {
           displayName: formData.name,
         });
-
         toast.success("Registration successful!");
-        console.log("Registered:", userCredential.user);
         await completeSignup(userCredential.user);
-
       } catch (error) {
         toast.error(error.message);
         setErrors({ email: error.message });
       }
     }
   };
+
   const handleGoogleSignup = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       toast.success("Google signup successful!");
-      console.log("Google User:", result.user);
       await completeSignup(result.user);
     } catch (error) {
       toast.error(error.message);
     }
   };
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create an account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Join us to start managing your features
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Full Name
-              </label>
-              <div className="mt-1">
-                <input
+  return (
+    <div className="fv-auth-shell">
+      <div className="fv-auth-inner flex min-h-screen flex-col px-4 py-10 sm:px-6 sm:py-12">
+        <header className="mx-auto mb-8 flex w-full max-w-md items-center justify-between sm:max-w-lg">
+          <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            ← Home
+          </Link>
+          <ThemeToggle />
+        </header>
+
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center sm:max-w-lg">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <ThemeLogo className="mb-6" />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Get started</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Create account</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Join FeatureVault to manage documentation and diagrams.</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card/95 p-6 shadow-fv-panel backdrop-blur-sm sm:p-8">
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-foreground">
+                  Full name
+                </Label>
+                <Input
                   id="name"
                   name="name"
                   type="text"
                   autoComplete="name"
                   required
+                  value={formData.name}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="h-10 rounded-xl border-border/80"
+                  placeholder="Jane Doe"
                 />
+                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
               </div>
-              {errors.name && (
-                <p className="mt-2 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground">
+                  Email
+                </Label>
+                <Input
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
+                  value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="h-10 rounded-xl border-border/80"
+                  placeholder="you@company.com"
                 />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
-              {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="mt-1">
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground">
+                  Password
+                </Label>
+                <Input
                   id="password"
                   name="password"
                   type="password"
                   autoComplete="new-password"
                   required
+                  value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="h-10 rounded-xl border-border/80"
+                  placeholder="At least 6 characters"
                 />
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
-              {errors.password && (
-                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors"
-              >
-                Sign up
-              </button>
-            </div>
-          </form>
+              <Button type="submit" className="h-10 w-full rounded-xl text-sm font-medium shadow-fv-soft">
+                Create account
+              </Button>
+            </form>
 
-          <div className="mt-6">
-            <div className="relative">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <span className="w-full border-t border-border" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Or continue with
-                </span>
+              <div className="relative flex justify-center text-xs uppercase tracking-wide text-muted-foreground">
+                <span className="bg-card px-3">Or continue with</span>
               </div>
             </div>
 
-            <div className="mt-6">
-              <button
-                onClick={handleGoogleSignup}
-                className="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <Image src={Google} alt="Google" height={20} width={20} />
-                Sign up with Google
-              </button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full gap-2 rounded-xl border-border/80 bg-background/50"
+              onClick={handleGoogleSignup}
+            >
+              <Image src={Google} alt="" height={20} width={20} className="size-5" />
+              Google
+            </Button>
           </div>
-        </div>
 
-        <p className="mt-8 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
-            Sign in
-          </Link>
-        </p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-primary transition hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 };
+
 export default Register;

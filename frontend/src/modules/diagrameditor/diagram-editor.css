@@ -1,0 +1,66 @@
+/* XYFlow reads this for dot / line pattern color */
+.diagram-editor-root {
+  --xy-background-pattern-color: color-mix(in oklch, var(--foreground), transparent 76%);
+}
+
+.dark .diagram-editor-root {
+  --xy-background-pattern-color: color-mix(in oklch, var(--foreground), transparent 68%);
+}
+
+.diagram-editor-root .react-flow__renderer {
+  transition: background-color 0.35s ease;
+}
+
+/* Floating toolbar tooltips (to the right of pill when bar is on the left) */
+.fv-diagram-tool {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fv-diagram-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  z-index: 50;
+  translate: 0 -50%;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  box-shadow: var(--fv-shadow-panel, 0 8px 24px oklch(0 0 0 / 0.12));
+}
+
+.fv-diagram-tooltip::after {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  translate: 0 -50%;
+  border: 6px solid transparent;
+  border-right-color: var(--border);
+}
+
+.fv-diagram-tool:hover .fv-diagram-tooltip,
+.fv-diagram-tool:focus-within .fv-diagram-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 640px) {
+  .fv-diagram-tooltip {
+    display: none;
+  }
+}
