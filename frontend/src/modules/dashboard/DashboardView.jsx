@@ -68,12 +68,17 @@ const DashboardView = () => {
   };
 
   const handleDownloadDiagram = async (diagram) => {
+    console.log("[DEBUG] handleDownloadDiagram click handler firing. Diagram:", diagram);
     setDownloadingDiagram(diagram._id);
     try {
+      console.log("[DEBUG] Calling downloadDiagramPng() now...");
       await downloadDiagramPng(diagram.image, `diagram-${diagram._id}`);
+      console.log("[DEBUG] downloadDiagramPng() call returned successfully.");
     } catch (error) {
+      console.error("[DEBUG] Caught error in handleDownloadDiagram:", error);
       alert("Failed to download diagram: " + error.message);
     } finally {
+      console.log("[DEBUG] handleDownloadDiagram complete. Resetting downloading state.");
       setDownloadingDiagram(null);
     }
   };

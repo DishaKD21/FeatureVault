@@ -3,13 +3,18 @@ import admin from "./firebaseAdmin.js";
 import User from "./user.model.js";
 
 export const verifyToken = async (req, res, next) => {
+  let token = null;
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ msg: "No token" });
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  } else if (req.query.token) {
+    token = req.query.token;
   }
 
-  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ msg: "No token" });
+  }
 
   try {
     const decoded = await admin.auth().verifyIdToken(token);

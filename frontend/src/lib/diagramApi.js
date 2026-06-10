@@ -1,5 +1,5 @@
 import API_URL from "../config";
-import { getAuthHeaders } from "@/components/auth/useAuth";
+import { getAuthHeaders, getAuthToken } from "@/components/auth/useAuth";
 const API_BASE = `${API_URL}/api`;
 
 /**
@@ -140,26 +140,29 @@ export const getAllDiagrams = async () => {
  * Download a stored diagram image as PNG
  */
 export const downloadDiagramPng = async (imagePath, filename = "diagram") => {
-  if (!imagePath) throw new Error("No diagram image available");
+  console.log("[DEBUG] downloadDiagramPng called with:", { imagePath, filename });
+  if (!imagePath) {
+    console.error("[DEBUG] No imagePath provided to downloadDiagramPng!");
+    throw new Error("No diagram image available");
+  }
 
-  const imageUrl = imagePath.startsWith("http")
-    ? imagePath
-    : `${API_URL}/${imagePath.replace(/\\/g, "/")}`;
+  // Extract diagram ID from filename (format: diagram-<id>)
+  const diagramId = filename.startsWith("diagram-") ? filename.replace("diagram-", "") : filename;
+  const token = getAuthToken();
 
-  const res = await fetch(imageUrl, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to download diagram image");
+  console.log("[DEBUG] Extracted diagramId:", diagramId, "hasToken:", !!token);
 
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}.png`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url);
+  const downloadUrl = `${API_BASE}/diagram/download/${diagramId}?token=${token}&filename=${filename}`;
+  console.log("[DEBUG] About to set window.location.href to:", downloadUrl);
+
+  try {
+    // Navigate directly to the backend download endpoint to stream the file download
+    window.location.href = downloadUrl;
+    console.log("[DEBUG] window.location.href set operation completed without throwing an error.");
+  } catch (err) {
+    console.error("[DEBUG] Error when setting window.location.href:", err);
+    throw err;
+  }
 };
  
 /**

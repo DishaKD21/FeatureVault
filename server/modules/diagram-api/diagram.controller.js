@@ -5,6 +5,7 @@ import { ApiError } from "../../utils/apiError.js";
 import { EntityMessages } from "../../utils/messages.js";
 import Documentation from "../documentation-api/documentation.model.js";
 import { generateDiagramExplanation } from "../../services/aiService.js";
+import { uploadToS3, deleteFromS3, getS3ObjectStream } from "../../services/s3Service.js";
 
 const messages = EntityMessages("Diagram");
 
@@ -24,9 +25,14 @@ export const createDiagram = asyncHandler(async (req, res) => {
     if (!ownedDocument) throw new ApiError(404, "Document not found");
   }
 
+  let imageUrl = null;
+  if (req.file) {
+    imageUrl = await uploadToS3(req.file);
+  }
+
   const diagram = await service.createDiagram({
     json: jsonData,
-    image: req.file?.path || null,
+    image: imageUrl,
     documentId: req.body.documentId || null,
     createdBy: req.user.id,
   });
@@ -66,7 +72,22 @@ export const updateDiagram = asyncHandler(async (req, res) => {
     updateData.json = jsonData;
     updateData.explanation = "";
   }
-  if (req.file?.path) updateData.image = req.file.path;
+
+  if (req.file) {
+    const existingDiagram = await service.getDiagramById(req.params.id, req.user.id);
+    if (!existingDiagram) throw new ApiError(404, messages.notFound);
+
+    const newImageUrl = await uploadToS3(req.file);
+    updateData.image = newImageUrl;
+
+    if (existingDiagram.image) {
+      try {
+        await deleteFromS3(existingDiagram.image);
+      } catch (err) {
+        console.error("Failed to delete old image from S3:", err);
+      }
+    }
+  }
 
   const updated = await service.updateDiagram(req.params.id, req.user.id, updateData);
   if (!updated) throw new ApiError(404, messages.notFound);
@@ -75,6 +96,17 @@ export const updateDiagram = asyncHandler(async (req, res) => {
 });
 
 export const deleteDiagram = asyncHandler(async (req, res) => {
+  const diagram = await service.getDiagramById(req.params.id, req.user.id);
+  if (!diagram) throw new ApiError(404, messages.notFound);
+
+  if (diagram.image) {
+    try {
+      await deleteFromS3(diagram.image);
+    } catch (err) {
+      console.error("Failed to delete diagram image from S3:", err);
+    }
+  }
+
   const deleted = await service.deleteDiagram(req.params.id, req.user.id);
   if (!deleted) throw new ApiError(404, messages.notFound);
 
@@ -114,3 +146,32 @@ export const generateExplanation = asyncHandler(async (req, res) => {
     "Explanation generated"
   );
 });
+
+export const downloadDiagram = asyncHandler(async (req, res) => {
+  const diagram = await service.getDiagramById(req.params.id, req.user.id);
+  if (!diagram || !diagram.image) {
+    throw new ApiError(404, "Diagram or image not found");
+  }
+
+  const filename = `${req.query.filename || "diagram"}.png`;
+
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.setHeader("Content-Type", "image/png");
+
+  const bucketName = process.env.AWS_BUCKET_NAME;
+  const urlPrefix = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+  if (diagram.image.startsWith(urlPrefix)) {
+    try {
+      const stream = await getS3ObjectStream(diagram.image);
+      stream.pipe(res);
+    } catch (err) {
+      console.error("Failed to stream diagram from S3:", err);
+      throw new ApiError(500, "Failed to download image from S3");
+    }
+  } else {
+    // Stream local file for legacy backward compatibility
+    res.download(diagram.image, filename);
+  }
+});
+
