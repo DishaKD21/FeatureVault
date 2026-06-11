@@ -1,0 +1,21 @@
+services:
+
+  backend:
+    build: ./server
+    container_name: featurevault-backend
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    container_name: featurevault-frontend
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
