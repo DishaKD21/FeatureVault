@@ -1,8 +1,39 @@
 # FeatureVault
-FeatureVault is an AI-powered documentation intelligence platform that automates the generation of structured technical documentation from feature descriptions and architecture diagrams.
 
-The system includes a web-based diagram editor built with React Flow, enabling users to create structured node–edge diagrams that are exported as semantic JSON graph data. This structured data is processed and transformed into standardized prompts used to fine-tune an open-source large language model (7B–8B instruct/code-focused model).
+**Live Application:** http://13.203.227.250:3000/
 
-The fine-tuned model learns to generate enterprise-level explanations from graph-based inputs, supporting modular and hierarchical processing to handle large and complex architectures while managing token constraints.
+## Overview
 
-The enhanced model is deployed as an independent API, enabling scalable and consistent automated documentation generation for industry-grade software systems.
+FeatureVault is a feature documentation platform that helps team lead to create, manage, and maintain structured technical documentation throughout the software development lifecycle. It enables users to capture requirements, design workflows using an interactive diagram editor, estimate implementation efforts, assign user stories, track releases, and maintain retrospectives by creating documentation of this.
+
+The platform also includes an AI-powered Diagram Explanation Engine that automatically generates textual explanations from workflow diagrams, reducing manual documentation effort and improving consistency across projects.
+
+## Core Features
+
+* Feature Documentation Management
+* Interactive Diagram Editor
+* AI-Powered Diagram Explanation Generation
+* Export Diagram Feature
+
+## Technology Stack
+
+### Frontend
+
+* Next.js
+* React
+* Tailwind CSS
+* Mantine UI
+* React Flow
+
+### Backend
+
+* Node.js
+* Express.js
+* MongoDB
+
+### AI Service
+
+* FastAPI
+* Python
+* Hugging Face Transformers
+* FLAN-T5
