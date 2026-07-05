@@ -1,6 +1,6 @@
 # FeatureVault
 
-**Live Application:** http://13.203.227.250:3000/
+**Live Application:** http://featurevault.duckdns.org:3000/
 
 ## Overview
 
