@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -14,7 +15,10 @@ MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "featurevault")
 DIAGRAM_COLLECTION = os.getenv("DIAGRAM_COLLECTION", os.getenv("COLLECTION_NAME", "diagrams"))
 DOCUMENT_COLLECTION = os.getenv("DOCUMENT_COLLECTION", "documentations")
-MODEL_NAME = "lizhuang144/flan-t5-base-VG-factual-sg"
+MODEL_PATH = os.getenv(
+    "MODEL_PATH",
+    str(Path(__file__).resolve().parent / "Finetuned_Model" / "diagram-explainer-final"),
+)
 
 if not MONGO_URI:
     raise RuntimeError("MONGO_URI is not set")
@@ -26,12 +30,18 @@ document_collection = db[DOCUMENT_COLLECTION]
 
 app = FastAPI()
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+print(f"Loading AI model from: {MODEL_PATH}", flush=True)
+print("Loading tokenizer...", flush=True)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+print("Tokenizer loaded.", flush=True)
+print("Loading model...", flush=True)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
+print("Model loaded.", flush=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 model.eval()
+print("AI service is ready.", flush=True)
 
 
 class GenerateRequest(BaseModel):

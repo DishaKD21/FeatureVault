@@ -1,6 +1,7 @@
 # FeatureVault
 
 **Live Application:** http://featurevault.duckdns.org:3000/
+**Document_demo(Docx/pdf):** https://drive.google.com/file/d/1jERGLn4qZCLYfRmxRvRSAhEuVu8bem3j/view?usp=sharing, https://docs.google.com/document/d/1mqJukTracgtGVIpIsL_DECATiHviEKSj/edit?usp=sharing&ouid=109548541710374947336&rtpof=true&sd=true
 
 ## Overview
 
@@ -35,5 +36,4 @@ The platform also includes an AI-powered Diagram Explanation Engine that automat
 
 * FastAPI
 * Python
-* Hugging Face Transformers
-* FLAN-T5
+* Finetuned FLAN-T5-Large

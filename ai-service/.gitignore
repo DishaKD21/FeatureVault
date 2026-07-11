@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.pytest_cache/
+.mypy_cache/
+*.log
+Finetuned_Model/**/*.zip
+Finetuned_Model/**/*.pt
+# AI Model
+Finetuned_Model/
+ai-service\.env
