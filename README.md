@@ -36,5 +36,4 @@ The platform also includes an AI-powered Diagram Explanation Engine that automat
 
 * FastAPI
 * Python
-* Hugging Face Transformers
-* FLAN-T5
+* Finetuned FLAN-T5-Large
